@@ -2,20 +2,16 @@
 import { cleanup, render, screen } from '@testing-library/react';
 import { axe, toHaveNoViolations } from 'jest-axe';
 
-import { AuthProvider } from './context/AuthContext';
-import { NotificationProvider } from './context/NotificationContext';
 import { ConfirmDialog } from './components/ConfirmDialog';
 import { EmailInput } from './components/EmailInput';
-import { LoginPage } from './pages/LoginPage';
-import type { AuthService } from './types';
 
 /**
  * Accessibility tests (task 18.3).
  *
- * Runs jest-axe against key pages/components to catch WCAG violations, asserts
- * ARIA labelling on inputs (Req 9.1 — accessible navigation/forms), and
- * verifies focus management in the ConfirmDialog (Req 10.6 / design
- * accessibility requirements).
+ * Runs jest-axe against key components to catch WCAG violations, asserts ARIA
+ * labelling on inputs (Req 9.1 — accessible navigation/forms), and verifies
+ * focus management in the ConfirmDialog (Req 10.6 / design accessibility
+ * requirements).
  *
  * Note: automated axe checks are necessary but not sufficient for full WCAG
  * conformance — manual testing with assistive technologies and expert review
@@ -24,36 +20,9 @@ import type { AuthService } from './types';
 
 expect.extend(toHaveNoViolations);
 
-function makeAuthService(overrides: Partial<AuthService> = {}): AuthService {
-  return {
-    login: jest.fn(async () => ({ success: true, token: 'tok' })),
-    logout: jest.fn(),
-    getToken: jest.fn(() => null),
-    isAuthenticated: jest.fn(() => false),
-    isTokenExpired: jest.fn(() => true),
-    ...overrides,
-  };
-}
-
 afterEach(cleanup);
 
 describe('Accessibility - axe checks', () => {
-  it('LoginPage has no detectable accessibility violations', async () => {
-    const { container } = render(
-      <AuthProvider
-        authService={makeAuthService()}
-        webSocketService={{ disconnect: jest.fn() }}
-        clearSession={jest.fn(() => true)}
-        redirectToLogin={jest.fn()}
-        forceReload={jest.fn()}
-      >
-        <LoginPage />
-      </AuthProvider>,
-    );
-
-    expect(await axe(container)).toHaveNoViolations();
-  });
-
   it('an open ConfirmDialog has no detectable accessibility violations', async () => {
     const { container } = render(
       <ConfirmDialog

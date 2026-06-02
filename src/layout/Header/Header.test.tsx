@@ -1,57 +1,12 @@
-import { act, cleanup, render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { cleanup, render, screen } from '@testing-library/react';
 import { Header, APP_NAME } from './Header';
-import { AuthProvider } from '../../context/AuthContext';
-import type { AuthService } from '../../types';
 
 /**
- * Component tests for the Header (Task 12.1).
+ * Component tests for the Header.
  *
- * Covers Requirements:
- * - 9.4: the application name "RITA Adobe" is displayed in the header.
- * - 11.1: a logout button is present and wired to AuthContext's `logout`,
- *   which closes the WebSocket, clears the session, and redirects to login.
+ * Covers Requirement 9.4: the application name "RITA Adobe" is displayed in the
+ * header. The app no longer has a login gate, so there is no logout control.
  */
-
-function makeAuthService(overrides: Partial<AuthService> = {}): AuthService {
-  return {
-    login: jest.fn(async () => ({ success: true, token: 'tok' })),
-    logout: jest.fn(),
-    // Start authenticated so the header represents a logged-in session.
-    getToken: jest.fn(() => 'live-token'),
-    isAuthenticated: jest.fn(() => true),
-    isTokenExpired: jest.fn(() => false),
-    ...overrides,
-  };
-}
-
-function renderHeader(
-  deps: {
-    webSocketService?: { disconnect: jest.Mock };
-    clearSession?: jest.Mock;
-    redirectToLogin?: jest.Mock;
-    forceReload?: jest.Mock;
-  } = {},
-) {
-  const webSocketService = deps.webSocketService ?? { disconnect: jest.fn() };
-  const clearSession = deps.clearSession ?? jest.fn(() => true);
-  const redirectToLogin = deps.redirectToLogin ?? jest.fn();
-  const forceReload = deps.forceReload ?? jest.fn();
-
-  render(
-    <AuthProvider
-      authService={makeAuthService()}
-      webSocketService={webSocketService}
-      clearSession={clearSession}
-      redirectToLogin={redirectToLogin}
-      forceReload={forceReload}
-    >
-      <Header />
-    </AuthProvider>,
-  );
-
-  return { webSocketService, clearSession, redirectToLogin, forceReload };
-}
 
 afterEach(() => {
   cleanup();
@@ -59,31 +14,17 @@ afterEach(() => {
 
 describe('Header', () => {
   it('displays the application name "RITA Adobe" (Req 9.4)', () => {
-    renderHeader();
+    render(<Header />);
 
     expect(screen.getByText(APP_NAME)).toBeInTheDocument();
     expect(screen.getByText('RITA Adobe')).toBeInTheDocument();
   });
 
-  it('renders a logout button in the header (Req 11.1)', () => {
-    renderHeader();
+  it('does not render a logout button (no auth gate)', () => {
+    render(<Header />);
 
     expect(
-      screen.getByRole('button', { name: 'Logout' }),
-    ).toBeInTheDocument();
-  });
-
-  it('clicking logout clears the session and redirects (Req 11.1)', async () => {
-    const user = userEvent.setup();
-    const { webSocketService, clearSession, redirectToLogin } = renderHeader();
-
-    await act(async () => {
-      await user.click(screen.getByRole('button', { name: 'Logout' }));
-    });
-
-    // logout closes the WebSocket, clears the token, then redirects.
-    expect(webSocketService.disconnect).toHaveBeenCalledTimes(1);
-    expect(clearSession).toHaveBeenCalledTimes(1);
-    expect(redirectToLogin).toHaveBeenCalledTimes(1);
+      screen.queryByRole('button', { name: 'Logout' }),
+    ).not.toBeInTheDocument();
   });
 });

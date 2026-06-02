@@ -1,0 +1,53 @@
+/* Global base styles for RITA Adobe.
+ *
+ * Sets a modern sans-serif system font stack (the app previously fell back to
+ * the browser default serif because no global stylesheet was loaded) and a few
+ * sensible resets. Component-level CSS layers on top of this. */
+
+:root {
+  --font-sans:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial,
+    'Apple Color Emoji', 'Segoe UI Emoji', sans-serif;
+  --font-mono:
+    ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono',
+    monospace;
+
+  font-family: var(--font-sans);
+  line-height: 1.5;
+  color: #0f172a;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  background-color: #f8fafc;
+}
+
+/* Ensure form controls inherit the sans-serif stack instead of the UA serif. */
+input,
+button,
+select,
+textarea {
+  font-family: inherit;
+}
+
+/* Monospace contexts (OTP value, monitor messages) opt in explicitly. */
+code,
+kbd,
+pre,
+samp {
+  font-family: var(--font-mono);
+}
