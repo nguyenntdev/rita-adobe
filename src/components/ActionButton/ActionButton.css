@@ -25,11 +25,13 @@
   background-color: var(--brand-60);
   border-color: var(--brand-60);
   color: var(--brand-foreground);
+  box-shadow: var(--shadow-2);
 }
 
 .action-button--primary:not(:disabled):hover {
   background-color: var(--brand-70);
   border-color: var(--brand-70);
+  box-shadow: var(--shadow-4);
 }
 
 .action-button--primary:not(:disabled):active {

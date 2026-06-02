@@ -140,10 +140,12 @@ export type StatusTone = 'success' | 'warning' | 'danger' | 'neutral';
 
 export function statusTone(raw: string): StatusTone {
   const s = raw.trim().toLowerCase();
-  if (['active', 'completed', 'success', 'renewed'].includes(s)) {
+  // The API's "processing" means the account has been processed and is ready
+  // (the source console shows it as "Active"), so treat it as success.
+  if (['active', 'completed', 'success', 'renewed', 'ready', 'processing'].includes(s)) {
     return 'success';
   }
-  if (['processing', 'pending', 'renewing'].includes(s)) {
+  if (['pending', 'renewing', 'queued'].includes(s)) {
     return 'warning';
   }
   if (['expired', 'cancelled', 'canceled', 'failed', 'suspended', 'inactive'].includes(s)) {

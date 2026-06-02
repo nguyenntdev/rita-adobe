@@ -117,7 +117,7 @@
 }
 
 .field-list__link {
-  color: var(--brand-60);
+  color: var(--accent);
   font-weight: 600;
   text-decoration: none;
 }

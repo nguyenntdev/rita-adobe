@@ -35,9 +35,9 @@ describe('AccountStatusCard', () => {
     expect(screen.getByTestId('account-email').textContent).toBe(
       'hnanhvu2704@renew.fyi',
     );
-    // "Processing" → Vietnamese badge.
+    // "Processing" → Vietnamese badge (means processed/ready).
     expect(screen.getByTestId('account-status-badge').textContent).toBe(
-      'Đang xử lý',
+      'Đã xử lý',
     );
     expect(
       screen.getByText('Adobe CCPRO, Renewable Account, 12 Month'),

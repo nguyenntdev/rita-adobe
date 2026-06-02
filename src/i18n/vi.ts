@@ -122,10 +122,16 @@ export const vi = {
   /**
    * Vietnamese display text for known account status values (case-insensitive
    * match on the raw status). Unknown statuses display verbatim.
+   *
+   * Note: the ADES API uses "Processing" to mean the account has been processed
+   * and is ready to use (the source console shows it as "Active"), so it maps to
+   * the positive "Đã xử lý" / "Sẵn sàng" wording.
    */
   statusValues: {
-    processing: 'Đang xử lý',
+    processing: 'Đã xử lý',
     active: 'Đang hoạt động',
+    ready: 'Sẵn sàng',
+    renewed: 'Đã gia hạn',
     pending: 'Đang chờ',
     suspended: 'Tạm ngưng',
     expired: 'Đã hết hạn',

@@ -33,8 +33,8 @@ describe('FieldList', () => {
 
   it('renders a status value as a Vietnamese badge', () => {
     render(<FieldList data={{ status: 'Processing' }} emptyMessage="trống" />);
-    // "Processing" → "Đang xử lý" badge.
-    expect(screen.getByText('Đang xử lý')).toBeInTheDocument();
+    // "Processing" → "Đã xử lý" badge.
+    expect(screen.getByText('Đã xử lý')).toBeInTheDocument();
     expect(screen.getByText('Trạng thái')).toBeInTheDocument();
   });
 

@@ -61,7 +61,7 @@
 
 .acct-card__icon-btn:hover {
   background: var(--bg-hover);
-  color: var(--brand-60);
+  color: var(--accent);
 }
 
 /* Status pill. */
@@ -147,23 +147,23 @@
   align-self: flex-start;
   gap: var(--sp-xs);
   padding: 0 var(--sp-l);
-  height: 36px;
+  height: 38px;
   border-radius: var(--radius-m);
-  background: var(--brand-tint);
-  color: var(--brand-60);
+  background: var(--accent-tint);
+  color: var(--accent);
   font-size: var(--fs-300);
   font-weight: 600;
   text-decoration: none;
 }
 
 .acct-card__access:hover {
-  background: var(--bg-pressed);
+  filter: brightness(0.96);
 }
 
 /* Handling note (Vietnamese). */
 .acct-card__note {
   border: 1px solid var(--stroke);
-  border-left: 3px solid var(--brand-60);
+  border-left: 3px solid var(--accent);
   border-radius: var(--radius-m);
   background: var(--bg-layer-alt);
   padding: var(--sp-m) var(--sp-l);
@@ -174,7 +174,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: var(--brand-60);
+  color: var(--accent);
   margin-bottom: var(--sp-xs);
 }
 

@@ -257,10 +257,7 @@ export function DashboardPage({
           <span className="app-bar__logo" aria-hidden="true">
             R
           </span>
-          <div>
-            <div className="app-bar__title">{vi.app.name}</div>
-            <div className="app-bar__tagline">{vi.app.tagline}</div>
-          </div>
+          <div className="app-bar__wordmark">{vi.app.name}</div>
         </div>
         <ThemeToggle />
       </header>

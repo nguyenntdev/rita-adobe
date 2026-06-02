@@ -1,4 +1,4 @@
-/* Enterprise single-screen support console (Fluent 2). */
+/* RITA support console — modern, clean, Fluent-inspired. */
 
 .app-shell {
   display: flex;
@@ -15,11 +15,11 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 56px;
+  height: 60px;
   padding: 0 var(--sp-xl);
-  background-color: var(--bg-layer);
+  background-color: color-mix(in srgb, var(--bg-layer) 85%, transparent);
+  backdrop-filter: saturate(180%) blur(12px);
   border-bottom: 1px solid var(--stroke);
-  box-shadow: var(--shadow-2);
 }
 
 .app-bar__brand {
@@ -32,23 +32,21 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
-  border-radius: var(--radius-m);
-  background: linear-gradient(135deg, var(--brand-60), var(--brand-70));
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: var(--brand-gradient);
   color: #ffffff;
-  font-weight: 700;
-}
-
-.app-bar__title {
+  font-weight: 800;
   font-size: var(--fs-400);
-  font-weight: 600;
-  line-height: 1.1;
+  letter-spacing: -0.02em;
 }
 
-.app-bar__tagline {
-  font-size: var(--fs-100);
-  color: var(--fg-muted);
+.app-bar__wordmark {
+  font-size: var(--fs-500);
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  color: var(--fg-default);
 }
 
 .theme-toggle {
@@ -57,24 +55,25 @@
   justify-content: center;
   width: 40px;
   height: 40px;
-  border: 1px solid var(--stroke-strong);
+  border: 1px solid var(--stroke);
   border-radius: var(--radius-m);
   background-color: var(--bg-layer);
   color: var(--fg-default);
-  font-size: var(--fs-500);
+  font-size: var(--fs-400);
   cursor: pointer;
-  transition: background-color 0.1s ease;
+  transition: background-color 0.12s ease, border-color 0.12s ease;
 }
 
 .theme-toggle:hover {
   background-color: var(--bg-hover);
+  border-color: var(--stroke-strong);
 }
 
 /* Centered content column. */
 .console {
   flex: 1 1 auto;
   width: 100%;
-  max-width: 1040px;
+  max-width: 960px;
   margin: 0 auto;
   padding: var(--sp-xxl) var(--sp-xl);
   display: flex;
@@ -95,12 +94,13 @@
 }
 
 .command-card__title {
-  font-size: var(--fs-600);
-  font-weight: 600;
+  font-size: var(--fs-700);
+  font-weight: 700;
+  letter-spacing: -0.02em;
 }
 
 .command-card__subtitle {
-  margin-top: -8px;
+  margin-top: -10px;
   font-size: var(--fs-300);
   color: var(--fg-muted);
 }
@@ -125,10 +125,8 @@
   gap: var(--sp-s);
 }
 
-/* Make the primary actions prominent. */
-.command-card__actions .action-button,
-.command-card__actions .menu__trigger {
-  height: 40px;
+.command-card__actions .action-button {
+  height: 42px;
 }
 
 .command-card__spacer {
@@ -143,15 +141,16 @@
 }
 
 .results__clear {
-  border: 1px solid var(--stroke-strong);
+  border: 1px solid var(--stroke);
   background: var(--bg-layer);
   color: var(--fg-secondary);
   font-size: var(--fs-200);
   font-weight: 600;
   cursor: pointer;
   padding: 0 var(--sp-m);
-  height: 40px;
+  height: 42px;
   border-radius: var(--radius-m);
+  transition: background-color 0.12s ease;
 }
 
 .results__clear:hover {
@@ -164,43 +163,41 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: var(--sp-s);
-  padding: var(--sp-xxl);
+  gap: var(--sp-m);
+  padding: 64px var(--sp-xxl);
   text-align: center;
-  background-color: var(--bg-layer);
+  background:
+    radial-gradient(
+      120% 80% at 50% 0%,
+      var(--bg-layer-alt) 0%,
+      var(--bg-layer) 60%
+    );
   border: 1px dashed var(--stroke-strong);
   border-radius: var(--radius-l);
   color: var(--fg-muted);
 }
 
+.results__placeholder-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--bg-subtle);
+  font-size: 26px;
+}
+
 .results__placeholder p {
   margin: 0;
+  font-size: var(--fs-300);
 }
 
-.results__placeholder-icon {
-  font-size: 40px;
-  opacity: 0.7;
-}
-
-/* Result cards: responsive masonry-ish grid that fills available width.
-   Wide content (status, 12h table, monitoring) reads best full-width, but
-   compact cards (reinvite, OTP, variables) pair up on wide screens. */
+/* Result cards stack full-width for readability. */
 .results__list {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  display: flex;
+  flex-direction: column;
   gap: var(--sp-l);
-  align-items: start;
-}
-
-/* The account status card (first child) and any single wide card span full. */
-.results__list > .result-panel:first-child {
-  grid-column: 1 / -1;
-}
-
-@media (max-width: 880px) {
-  .results__list {
-    grid-template-columns: 1fr;
-  }
 }
 
 /* OTP value presentation. */
@@ -214,13 +211,14 @@
 
 .otp-result__value {
   font-family: var(--font-mono);
-  font-size: 30px;
+  font-size: 32px;
   font-weight: 700;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.18em;
   color: var(--fg-default);
-  background-color: var(--bg-subtle);
-  padding: var(--sp-s) var(--sp-l);
+  background: var(--bg-subtle);
+  padding: var(--sp-m) var(--sp-xl);
   border-radius: var(--radius-m);
+  border: 1px solid var(--stroke);
 }
 
 .panel-empty {
