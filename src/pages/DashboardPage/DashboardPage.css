@@ -1,4 +1,4 @@
-/* Fluent 2 unified dashboard layout. */
+/* Enterprise single-screen support console (Fluent 2). */
 
 .app-shell {
   display: flex;
@@ -7,11 +7,11 @@
   background-color: var(--bg-canvas);
 }
 
-/* Top app bar: brand on the left, theme toggle on the right. */
+/* Top app bar. */
 .app-bar {
   position: sticky;
   top: 0;
-  z-index: 10;
+  z-index: 30;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -38,11 +38,10 @@
   background: linear-gradient(135deg, var(--brand-60), var(--brand-70));
   color: #ffffff;
   font-weight: 700;
-  font-size: var(--fs-400);
 }
 
 .app-bar__title {
-  font-size: var(--fs-500);
+  font-size: var(--fs-400);
   font-weight: 600;
   line-height: 1.1;
 }
@@ -71,20 +70,20 @@
   background-color: var(--bg-hover);
 }
 
-/* Main content area. */
-.dashboard {
+/* Centered content column. */
+.console {
   flex: 1 1 auto;
   width: 100%;
-  max-width: 1280px;
+  max-width: 1040px;
   margin: 0 auto;
-  padding: var(--sp-xl);
+  padding: var(--sp-xxl) var(--sp-xl);
   display: flex;
   flex-direction: column;
   gap: var(--sp-xl);
 }
 
-/* Search/command card holding the email field + actions. */
-.dashboard__command {
+/* Command card: email + actions. */
+.command-card {
   display: flex;
   flex-direction: column;
   gap: var(--sp-l);
@@ -95,38 +94,113 @@
   box-shadow: var(--shadow-4);
 }
 
-.dashboard__command-header {
-  display: flex;
-  flex-direction: column;
-  gap: var(--sp-xs);
-}
-
-.dashboard__command-title {
-  font-size: var(--fs-500);
+.command-card__title {
+  font-size: var(--fs-600);
   font-weight: 600;
 }
 
-.dashboard__command-hint {
-  font-size: var(--fs-200);
+.command-card__subtitle {
+  margin-top: -8px;
+  font-size: var(--fs-300);
   color: var(--fg-muted);
 }
 
-.dashboard__email {
-  max-width: 520px;
+.command-card__field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-xs);
+  max-width: 560px;
 }
 
-.dashboard__actions {
+.command-card__field-label {
+  font-size: var(--fs-200);
+  font-weight: 600;
+  color: var(--fg-secondary);
+}
+
+.command-card__actions {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: var(--sp-s);
 }
 
-/* Responsive grid of result panels. */
-.dashboard__grid {
+/* Make the primary actions prominent. */
+.command-card__actions .action-button,
+.command-card__actions .menu__trigger {
+  height: 40px;
+}
+
+.command-card__spacer {
+  flex: 1 1 auto;
+}
+
+/* Results region. */
+.results {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-l);
+}
+
+.results__clear {
+  border: 1px solid var(--stroke-strong);
+  background: var(--bg-layer);
+  color: var(--fg-secondary);
+  font-size: var(--fs-200);
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0 var(--sp-m);
+  height: 40px;
+  border-radius: var(--radius-m);
+}
+
+.results__clear:hover {
+  background-color: var(--bg-hover);
+}
+
+/* Empty placeholder when nothing has been run. */
+.results__placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-s);
+  padding: var(--sp-xxl);
+  text-align: center;
+  background-color: var(--bg-layer);
+  border: 1px dashed var(--stroke-strong);
+  border-radius: var(--radius-l);
+  color: var(--fg-muted);
+}
+
+.results__placeholder p {
+  margin: 0;
+}
+
+.results__placeholder-icon {
+  font-size: 40px;
+  opacity: 0.7;
+}
+
+/* Result cards: responsive masonry-ish grid that fills available width.
+   Wide content (status, 12h table, monitoring) reads best full-width, but
+   compact cards (reinvite, OTP, variables) pair up on wide screens. */
+.results__list {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--sp-l);
   align-items: start;
+}
+
+/* The account status card (first child) and any single wide card span full. */
+.results__list > .result-panel:first-child {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 880px) {
+  .results__list {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* OTP value presentation. */
@@ -140,12 +214,12 @@
 
 .otp-result__value {
   font-family: var(--font-mono);
-  font-size: 28px;
+  font-size: 30px;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.12em;
   color: var(--fg-default);
   background-color: var(--bg-subtle);
-  padding: var(--sp-s) var(--sp-m);
+  padding: var(--sp-s) var(--sp-l);
   border-radius: var(--radius-m);
 }
 
@@ -157,6 +231,9 @@
 }
 
 .reinvite-message {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-s);
   padding: var(--sp-l);
   margin: 0;
   color: var(--status-success);
@@ -180,10 +257,4 @@
   text-align: center;
   background-color: var(--bg-canvas);
   color: var(--fg-secondary);
-}
-
-.viewport-guard p {
-  max-width: 32rem;
-  font-size: var(--fs-400);
-  line-height: 1.6;
 }

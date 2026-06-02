@@ -112,7 +112,6 @@ describe('DashboardPage — Property 13: Dashboard panel result replacement', ()
           });
 
           const button = screen.getByRole('button', { name: 'Kiểm tra trạng thái' });
-          const panel = screen.getByRole('region', { name: 'Trạng thái tài khoản' });
 
           // Run every result through the same panel in order. Each click awaits
           // the resolved checkAccount promise so the panel reflects that result.
@@ -123,20 +122,18 @@ describe('DashboardPage — Property 13: Dashboard panel result replacement', ()
             });
           }
 
-          // After the full sequence, only the final result remains. Earlier
-          // results whose key/value do not also appear in the final result must
-          // be absent (Property 13 / Req 12.5).
-          const finalData = results[results.length - 1];
-          const [finalKey, finalValue] = Object.entries(finalData)[0];
+          // After the full sequence, only the final result remains. The values
+          // (v_<token>) are rendered verbatim by FieldList and uniquely
+          // identify each result; earlier values must be gone (Req 12.5).
+          const panel = screen.getByRole('region', {
+            name: 'Trạng thái tài khoản',
+          });
+          const finalValue = Object.values(results[results.length - 1])[0];
 
-          expect(within(panel).queryByText(finalKey)).not.toBeNull();
           expect(within(panel).queryByText(finalValue)).not.toBeNull();
 
           for (let i = 0; i < results.length - 1; i += 1) {
-            const [key, value] = Object.entries(results[i])[0];
-            if (key !== finalKey) {
-              expect(within(panel).queryByText(key)).toBeNull();
-            }
+            const value = Object.values(results[i])[0];
             if (value !== finalValue) {
               expect(within(panel).queryByText(value)).toBeNull();
             }

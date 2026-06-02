@@ -2,9 +2,10 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { ActionButton } from '../../components/ActionButton';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
+import { FieldList } from '../../components/FieldList/FieldList';
 import { DataTable } from '../../components/DataTable';
 import { EmailInput } from '../../components/EmailInput';
-import { KeyValueDisplay } from '../../components/KeyValueDisplay';
+import { Menu } from '../../components/Menu/Menu';
 import { MonitorPanel } from '../../components/MonitorPanel';
 import { ResultPanel } from '../../components/ResultPanel';
 import { ThemeToggle } from '../../components/ThemeToggle/ThemeToggle';
@@ -25,25 +26,15 @@ import type {
 import './DashboardPage.css';
 
 /**
- * Unified, Vietnamese-first account dashboard (Fluent 2 design).
+ * Unified, Vietnamese-first support console (Fluent 2, enterprise layout).
  *
- * A single screen with a top app bar (brand + light/dark theme toggle), one
- * persisted email field with quick-action buttons, and a responsive grid of
- * dedicated result cards: Trạng thái tài khoản, Dữ liệu 12 giờ, Biến dữ liệu,
- * Trạng thái mời lại, Mã OTP, Theo dõi thời gian thực.
- *
- * Behaviour:
- *   - Each operation routes its success/error result into its own card and
- *     replaces any previous result there.
- *   - The email value persists across operations until the user edits it.
- *   - Reinvite is gated behind a confirmation dialog naming the exact email.
- *   - Success/error feedback is also surfaced as toasts.
- *
- * The services and monitor factory are injectable (defaulting to the real
- * implementations) so the page can be exercised in isolation.
+ * Designed around the staff member's primary flow: enter the customer's email,
+ * then either check the account status or reinvite. Secondary tools (12-hour
+ * data, variables, OTP, real-time monitoring) live in a compact "Công cụ khác"
+ * dropdown so the surface stays uncluttered. Result cards only appear after the
+ * matching operation runs (OTP shows only on demand).
  */
 
-/** Discriminated async state shared by the request-backed panels. */
 type AsyncState<T> =
   | { status: 'idle' }
   | { status: 'loading' }
@@ -65,11 +56,9 @@ export function DashboardPage({
 }: DashboardPageProps = {}) {
   const { showSuccess, showError } = useNotifications();
 
-  // Persisted email shared by every operation.
   const [email, setEmail] = useState('');
   const [isEmailValid, setIsEmailValid] = useState(false);
 
-  // Per-panel result state; replacing the whole object drops prior results.
   const [accountStatus, setAccountStatus] = useState<
     AsyncState<Record<string, unknown>>
   >(IDLE);
@@ -84,7 +73,8 @@ export function DashboardPage({
 
   const [isReinviteDialogOpen, setIsReinviteDialogOpen] = useState(false);
 
-  // Monitoring panel state.
+  // Monitoring lives in a panel that is only shown once started.
+  const [monitorActive, setMonitorActive] = useState(false);
   const [monitorMessages, setMonitorMessages] = useState<WSMessage[]>([]);
   const [monitorStatus, setMonitorStatus] =
     useState<ConnectionStatus>('disconnected');
@@ -190,6 +180,7 @@ export function DashboardPage({
     if (!monitor) {
       return;
     }
+    setMonitorActive(true);
     setMonitorMessages([]);
     monitor.connect(email);
   }, [email]);
@@ -213,7 +204,50 @@ export function DashboardPage({
     [showSuccess, showError],
   );
 
+  const handleClear = useCallback(() => {
+    setAccountStatus(IDLE);
+    setAccount12h(IDLE);
+    setVariables(IDLE);
+    setReinviteState(IDLE);
+    setOtpState(IDLE);
+    setMonitorActive(false);
+    setMonitorMessages([]);
+    monitorRef.current?.disconnect();
+  }, []);
+
   const actionsDisabled = !isEmailValid;
+
+  // Secondary tools handled via the dropdown.
+  const toolSelect = useCallback(
+    (id: string) => {
+      switch (id) {
+        case '12h':
+          void handleView12h();
+          break;
+        case 'variables':
+          void handleGetVariables();
+          break;
+        case 'otp':
+          void handleReadOtp();
+          break;
+        case 'monitor':
+          handleStartMonitoring();
+          break;
+        default:
+          break;
+      }
+    },
+    [handleView12h, handleGetVariables, handleReadOtp, handleStartMonitoring],
+  );
+
+  // Which result cards to show (only ones that have been invoked).
+  const hasAnyResult =
+    accountStatus.status !== 'idle' ||
+    account12h.status !== 'idle' ||
+    variables.status !== 'idle' ||
+    reinviteState.status !== 'idle' ||
+    otpState.status !== 'idle' ||
+    monitorActive;
 
   return (
     <div className="app-shell">
@@ -230,14 +264,13 @@ export function DashboardPage({
         <ThemeToggle />
       </header>
 
-      <main className="dashboard" data-testid="dashboard-page">
-        <section className="dashboard__command">
-          <div className="dashboard__command-header">
-            <h1 className="dashboard__command-title">{vi.app.tagline}</h1>
-            <p className="dashboard__command-hint">{vi.empty.initial}</p>
-          </div>
+      <main className="console" data-testid="dashboard-page">
+        <section className="command-card">
+          <h1 className="command-card__title">{vi.panels.accountStatus}</h1>
+          <p className="command-card__subtitle">{vi.empty.noEmail}</p>
 
-          <div className="dashboard__email">
+          <div className="command-card__field">
+            <label className="command-card__field-label">{vi.email.label}</label>
             <EmailInput
               value={email}
               onChange={setEmail}
@@ -247,29 +280,16 @@ export function DashboardPage({
           </div>
 
           <div
-            className="dashboard__actions"
+            className="command-card__actions"
             role="group"
             aria-label="Thao tác tài khoản"
           >
+            {/* Primary actions customers need most. */}
             <ActionButton
               label={vi.actions.checkStatus}
               onClick={handleCheckStatus}
               disabled={actionsDisabled}
               loading={accountStatus.status === 'loading'}
-            />
-            <ActionButton
-              label={vi.actions.view12h}
-              onClick={handleView12h}
-              disabled={actionsDisabled}
-              loading={account12h.status === 'loading'}
-              variant="secondary"
-            />
-            <ActionButton
-              label={vi.actions.getVariables}
-              onClick={handleGetVariables}
-              disabled={actionsDisabled}
-              loading={variables.status === 'loading'}
-              variant="secondary"
             />
             <ActionButton
               label={vi.actions.reinvite}
@@ -278,135 +298,204 @@ export function DashboardPage({
               loading={reinviteState.status === 'loading'}
               variant="secondary"
             />
-            <ActionButton
-              label={vi.actions.readOtp}
-              onClick={handleReadOtp}
+
+            {/* Secondary tools grouped to keep the surface clean. */}
+            <Menu
+              triggerLabel={vi.actions.moreTools}
               disabled={actionsDisabled}
-              loading={otpState.status === 'loading'}
-              variant="secondary"
+              onSelect={toolSelect}
+              items={[
+                {
+                  id: '12h',
+                  label: vi.actions.view12h,
+                  icon: '🕒',
+                  loading: account12h.status === 'loading',
+                  testId: 'tool-12h',
+                },
+                {
+                  id: 'variables',
+                  label: vi.actions.getVariables,
+                  icon: '🔧',
+                  loading: variables.status === 'loading',
+                  testId: 'tool-variables',
+                },
+                {
+                  id: 'otp',
+                  label: vi.actions.readOtp,
+                  icon: '🔑',
+                  loading: otpState.status === 'loading',
+                  testId: 'tool-otp',
+                },
+                {
+                  id: 'monitor',
+                  label: vi.actions.startMonitoring,
+                  icon: '📡',
+                  testId: 'tool-monitor',
+                },
+              ]}
             />
-            <ActionButton
-              label={vi.actions.startMonitoring}
-              onClick={handleStartMonitoring}
-              disabled={actionsDisabled}
-              loading={monitorStatus === 'connecting'}
-              variant="secondary"
-            />
+
+            <span className="command-card__spacer" />
+
+            {hasAnyResult && (
+              <button
+                type="button"
+                className="results__clear"
+                onClick={handleClear}
+              >
+                {vi.actions.clear}
+              </button>
+            )}
           </div>
         </section>
 
-        <div className="dashboard__grid">
-          <ResultPanel
-            title={vi.panels.accountStatus}
-            loading={accountStatus.status === 'loading'}
-            error={
-              accountStatus.status === 'error' ? accountStatus.error : undefined
-            }
-          >
-            {accountStatus.status === 'success' ? (
-              <KeyValueDisplay
-                data={accountStatus.data}
-                label={vi.panels.accountStatus}
-                emptyMessage={vi.empty.accountStatus}
-              />
-            ) : (
-              <p className="panel-empty">{vi.empty.accountStatus}</p>
-            )}
-          </ResultPanel>
-
-          <ResultPanel
-            title={vi.panels.account12h}
-            loading={account12h.status === 'loading'}
-            error={account12h.status === 'error' ? account12h.error : undefined}
-          >
-            {account12h.status === 'success' ? (
-              <DataTable
-                records={account12h.data}
-                label={vi.panels.account12h}
-                emptyMessage={vi.empty.account12h}
-              />
-            ) : (
-              <p className="panel-empty">{vi.empty.account12h}</p>
-            )}
-          </ResultPanel>
-
-          <ResultPanel
-            title={vi.panels.variables}
-            loading={variables.status === 'loading'}
-            error={variables.status === 'error' ? variables.error : undefined}
-          >
-            {variables.status === 'success' ? (
-              <KeyValueDisplay
-                data={variables.data}
-                label={vi.panels.variables}
-                emptyMessage={vi.empty.variables}
-              />
-            ) : (
-              <p className="panel-empty">{vi.empty.variables}</p>
-            )}
-          </ResultPanel>
-
-          <ResultPanel
-            title={vi.panels.reinvite}
-            loading={reinviteState.status === 'loading'}
-            error={
-              reinviteState.status === 'error' ? reinviteState.error : undefined
-            }
-          >
-            {reinviteState.status === 'success' ? (
-              <p className="reinvite-message" data-testid="reinvite-message">
-                {reinviteState.data}
-              </p>
-            ) : (
-              <p className="panel-empty">{vi.empty.initial}</p>
-            )}
-          </ResultPanel>
-
-          <ResultPanel
-            title={vi.panels.otp}
-            loading={otpState.status === 'loading'}
-            error={otpState.status === 'error' ? otpState.error : undefined}
-          >
-            {otpState.status === 'success' ? (
-              otpState.data.otp !== undefined ? (
-                <div className="otp-result">
-                  <span className="otp-result__value" data-testid="otp-value">
-                    {otpState.data.otp}
-                  </span>
-                  <ActionButton
-                    label={vi.actions.copy}
-                    onClick={() => handleCopyOtp(otpState.data.otp as string)}
-                    variant="secondary"
-                  />
-                </div>
-              ) : (
-                <p className="panel-empty" data-testid="otp-empty">
-                  {vi.empty.otp}
-                </p>
-              )
-            ) : (
-              <p className="panel-empty">{vi.empty.otp}</p>
-            )}
-          </ResultPanel>
-
-          <ResultPanel title={vi.panels.monitoring}>
-            <div className="monitor-controls" data-testid="monitor-controls">
-              <ActionButton
-                label={vi.actions.disconnect}
-                onClick={handleStopMonitoring}
-                disabled={
-                  monitorStatus === 'disconnected' || monitorStatus === 'error'
-                }
-                variant="danger"
-              />
-              <MonitorPanel
-                messages={monitorMessages}
-                maxMessages={MAX_QUEUE_SIZE}
-                status={monitorStatus}
-              />
+        <section className="results" aria-label="Kết quả">
+          {!hasAnyResult ? (
+            <div className="results__placeholder">
+              <span className="results__placeholder-icon" aria-hidden="true">
+                🔍
+              </span>
+              <p>{vi.empty.resultsHint}</p>
             </div>
-          </ResultPanel>
-        </div>
+          ) : (
+            <div className="results__list">
+              {accountStatus.status !== 'idle' && (
+                <ResultPanel
+                  title={vi.panels.accountStatus}
+                  loading={accountStatus.status === 'loading'}
+                  error={
+                    accountStatus.status === 'error'
+                      ? accountStatus.error
+                      : undefined
+                  }
+                >
+                  {accountStatus.status === 'success' ? (
+                    <FieldList
+                      data={accountStatus.data}
+                      label={vi.panels.accountStatus}
+                      emptyMessage={vi.empty.accountStatus}
+                    />
+                  ) : (
+                    <p className="panel-empty">{vi.empty.accountStatus}</p>
+                  )}
+                </ResultPanel>
+              )}
+
+              {reinviteState.status !== 'idle' && (
+                <ResultPanel
+                  title={vi.panels.reinvite}
+                  loading={reinviteState.status === 'loading'}
+                  error={
+                    reinviteState.status === 'error'
+                      ? reinviteState.error
+                      : undefined
+                  }
+                >
+                  {reinviteState.status === 'success' ? (
+                    <p className="reinvite-message" data-testid="reinvite-message">
+                      <span aria-hidden="true">✓</span>
+                      {reinviteState.data}
+                    </p>
+                  ) : (
+                    <p className="panel-empty">{vi.empty.initial}</p>
+                  )}
+                </ResultPanel>
+              )}
+
+              {otpState.status !== 'idle' && (
+                <ResultPanel
+                  title={vi.panels.otp}
+                  loading={otpState.status === 'loading'}
+                  error={otpState.status === 'error' ? otpState.error : undefined}
+                >
+                  {otpState.status === 'success' ? (
+                    otpState.data.otp !== undefined ? (
+                      <div className="otp-result">
+                        <span className="otp-result__value" data-testid="otp-value">
+                          {otpState.data.otp}
+                        </span>
+                        <ActionButton
+                          label={vi.actions.copy}
+                          onClick={() =>
+                            handleCopyOtp(otpState.data.otp as string)
+                          }
+                          variant="secondary"
+                        />
+                      </div>
+                    ) : (
+                      <p className="panel-empty" data-testid="otp-empty">
+                        {vi.empty.otp}
+                      </p>
+                    )
+                  ) : (
+                    <p className="panel-empty">{vi.empty.otp}</p>
+                  )}
+                </ResultPanel>
+              )}
+
+              {account12h.status !== 'idle' && (
+                <ResultPanel
+                  title={vi.panels.account12h}
+                  loading={account12h.status === 'loading'}
+                  error={
+                    account12h.status === 'error' ? account12h.error : undefined
+                  }
+                >
+                  {account12h.status === 'success' ? (
+                    <DataTable
+                      records={account12h.data}
+                      label={vi.panels.account12h}
+                      emptyMessage={vi.empty.account12h}
+                    />
+                  ) : (
+                    <p className="panel-empty">{vi.empty.account12h}</p>
+                  )}
+                </ResultPanel>
+              )}
+
+              {variables.status !== 'idle' && (
+                <ResultPanel
+                  title={vi.panels.variables}
+                  loading={variables.status === 'loading'}
+                  error={
+                    variables.status === 'error' ? variables.error : undefined
+                  }
+                >
+                  {variables.status === 'success' ? (
+                    <FieldList
+                      data={variables.data}
+                      label={vi.panels.variables}
+                      emptyMessage={vi.empty.variables}
+                    />
+                  ) : (
+                    <p className="panel-empty">{vi.empty.variables}</p>
+                  )}
+                </ResultPanel>
+              )}
+
+              {monitorActive && (
+                <ResultPanel title={vi.panels.monitoring}>
+                  <div className="monitor-controls" data-testid="monitor-controls">
+                    <ActionButton
+                      label={vi.actions.disconnect}
+                      onClick={handleStopMonitoring}
+                      disabled={
+                        monitorStatus === 'disconnected' ||
+                        monitorStatus === 'error'
+                      }
+                      variant="danger"
+                    />
+                    <MonitorPanel
+                      messages={monitorMessages}
+                      maxMessages={MAX_QUEUE_SIZE}
+                      status={monitorStatus}
+                    />
+                  </div>
+                </ResultPanel>
+              )}
+            </div>
+          )}
+        </section>
       </main>
 
       <ConfirmDialog

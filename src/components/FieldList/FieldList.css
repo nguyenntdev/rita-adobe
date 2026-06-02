@@ -1,0 +1,156 @@
+/* Readable, form-like field list for API records. */
+.field-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.field-list__row {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: var(--sp-l);
+  padding: var(--sp-m) var(--sp-l);
+  border-bottom: 1px solid var(--stroke);
+  align-items: start;
+}
+
+.field-list__row:last-child {
+  border-bottom: none;
+}
+
+.field-list__label {
+  font-size: var(--fs-300);
+  font-weight: 600;
+  color: var(--fg-secondary);
+}
+
+.field-list__value-cell {
+  min-width: 0;
+}
+
+.field-list__value {
+  font-size: var(--fs-300);
+  color: var(--fg-default);
+  word-break: break-word;
+}
+
+.field-list__value--multiline {
+  white-space: pre-wrap;
+  line-height: 1.6;
+}
+
+.field-list__empty {
+  color: var(--fg-muted);
+  font-style: italic;
+}
+
+.field-list__empty-message {
+  padding: var(--sp-l);
+  margin: 0;
+  color: var(--fg-muted);
+}
+
+/* Boolean chips. */
+.field-list__chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 10px;
+  border-radius: var(--radius-circular);
+  font-size: var(--fs-200);
+  font-weight: 600;
+}
+
+.field-list__chip--yes {
+  background-color: var(--status-success-bg);
+  color: var(--status-success);
+}
+
+.field-list__chip--no {
+  background-color: var(--bg-subtle);
+  color: var(--fg-muted);
+}
+
+/* Status badges. */
+.field-list__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 12px;
+  border-radius: var(--radius-circular);
+  font-size: var(--fs-200);
+  font-weight: 600;
+}
+
+.field-list__badge::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: currentColor;
+}
+
+.field-list__badge--success {
+  background-color: var(--status-success-bg);
+  color: var(--status-success);
+}
+
+.field-list__badge--warning {
+  background-color: var(--status-warning-bg);
+  color: var(--status-warning);
+}
+
+.field-list__badge--danger {
+  background-color: var(--status-danger-bg);
+  color: var(--status-danger);
+}
+
+.field-list__badge--neutral {
+  background-color: var(--bg-subtle);
+  color: var(--fg-secondary);
+}
+
+/* Links + copy. */
+.field-list__link-row {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-s);
+  flex-wrap: wrap;
+}
+
+.field-list__link {
+  color: var(--brand-60);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.field-list__link:hover {
+  text-decoration: underline;
+}
+
+.field-list__copy {
+  border: 1px solid var(--stroke-strong);
+  background-color: var(--bg-layer);
+  color: var(--fg-secondary);
+  font-size: var(--fs-100);
+  padding: 2px 8px;
+  border-radius: var(--radius-s);
+  cursor: pointer;
+}
+
+.field-list__copy:hover {
+  background-color: var(--bg-hover);
+}
+
+/* Nested objects/arrays. */
+.field-list__nested {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--stroke);
+  border-radius: var(--radius-m);
+  background-color: var(--bg-layer-alt);
+  overflow: hidden;
+}
+
+.field-list__nested .field-list__row {
+  grid-template-columns: 160px 1fr;
+  padding: var(--sp-s) var(--sp-m);
+}

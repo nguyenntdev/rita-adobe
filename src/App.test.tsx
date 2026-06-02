@@ -107,9 +107,9 @@ describe('App - dashboard operations route into panels', () => {
 
     const panel = screen.getByRole('region', { name: vi.panels.accountStatus });
     await waitFor(() =>
-      expect(within(panel).getByText('status')).toBeInTheDocument(),
+      expect(within(panel).getByText('Trạng thái')).toBeInTheDocument(),
     );
-    expect(within(panel).getByText('active')).toBeInTheDocument();
+    expect(within(panel).getByText('Đang hoạt động')).toBeInTheDocument();
     expect(mockedCheckAccount).toHaveBeenCalledWith('user@example.com');
   });
 

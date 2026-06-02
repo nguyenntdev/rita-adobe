@@ -25,7 +25,7 @@ export const vi = {
     checkStatus: 'Kiểm tra trạng thái',
     view12h: 'Dữ liệu 12 giờ',
     getVariables: 'Lấy biến dữ liệu',
-    reinvite: 'Mời lại',
+    reinvite: 'Mời lại tài khoản',
     readOtp: 'Đọc mã OTP',
     startMonitoring: 'Bắt đầu theo dõi',
     disconnect: 'Ngắt kết nối',
@@ -33,6 +33,8 @@ export const vi = {
     copy: 'Sao chép',
     confirm: 'Xác nhận',
     cancel: 'Hủy',
+    moreTools: 'Công cụ khác',
+    clear: 'Xóa kết quả',
   },
   panels: {
     accountStatus: 'Trạng thái tài khoản',
@@ -49,6 +51,8 @@ export const vi = {
     otp: 'Không tìm thấy mã OTP cho email này.',
     monitoring: 'Chưa có tin nhắn nào.',
     initial: 'Nhập email và chọn một thao tác để bắt đầu.',
+    noEmail: 'Nhập email của khách hàng để bắt đầu tra cứu.',
+    resultsHint: 'Kết quả sẽ hiển thị ở đây sau khi bạn chọn một thao tác.',
   },
   status: {
     idle: 'Chưa thực hiện',
@@ -86,6 +90,59 @@ export const vi = {
     messages: 'tin nhắn',
     timestampHeader: 'Thời gian',
     contentHeader: 'Nội dung',
+  },
+  /**
+   * Vietnamese labels for known API field keys. Unknown keys fall back to a
+   * humanized version of the raw key (see `humanizeKey`).
+   */
+  fields: {
+    email: 'Email',
+    status: 'Trạng thái',
+    productName: 'Tên sản phẩm',
+    teamName: 'Nhóm (Team)',
+    groupName: 'Tên nhóm',
+    product: 'Sản phẩm',
+    name: 'Tên',
+    id: 'Mã',
+    upgradeForm: 'Biểu mẫu nâng cấp',
+    updatedAt: 'Cập nhật lúc',
+    createdAt: 'Tạo lúc',
+    expiresAt: 'Hết hạn lúc',
+    note: 'Ghi chú',
+    parentMultiNote: 'Ghi chú chung',
+    warrantyProviderAccount: 'Tài khoản nhà cung cấp bảo hành',
+    accountBeingWarranted: 'Tài khoản được bảo hành',
+    productAccessUrl: 'Liên kết truy cập sản phẩm',
+    teamId: 'Mã nhóm',
+    groupId: 'Mã nhóm con',
+    region: 'Khu vực',
+    tier: 'Bậc',
+    plan: 'Gói',
+  } as Record<string, string>,
+  /**
+   * Vietnamese display text for known account status values (case-insensitive
+   * match on the raw status). Unknown statuses display verbatim.
+   */
+  statusValues: {
+    processing: 'Đang xử lý',
+    active: 'Đang hoạt động',
+    pending: 'Đang chờ',
+    suspended: 'Tạm ngưng',
+    expired: 'Đã hết hạn',
+    cancelled: 'Đã hủy',
+    canceled: 'Đã hủy',
+    completed: 'Hoàn tất',
+    failed: 'Thất bại',
+    inactive: 'Ngừng hoạt động',
+  } as Record<string, string>,
+  values: {
+    yes: 'Có',
+    no: 'Không',
+    none: 'Không có',
+    empty: '(trống)',
+    openLink: 'Mở liên kết',
+    copy: 'Sao chép',
+    copied: 'Đã sao chép',
   },
   viewport: {
     desktopOnly:

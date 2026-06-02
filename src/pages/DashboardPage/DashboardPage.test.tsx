@@ -20,24 +20,18 @@ import type {
 import { DashboardPage } from './DashboardPage';
 
 /**
- * Unit/component tests for the DashboardPage (task 17.1).
+ * Component tests for the enterprise DashboardPage.
  *
- * Covers:
- *   - Quick-action buttons exist for every operation and are gated on a valid
- *     email (Requirements 12.1, 12.2).
- *   - Each operation's success/error result is routed into its dedicated panel
- *     (Requirements 12.3, 12.4).
- *   - Re-running an operation replaces the prior panel result (Requirement 12.5).
- *   - The email field persists across operations (Requirement 12.6).
- *   - Reinvite is gated behind a confirmation dialog naming the email; cancel
- *     issues no request (Requirements 5.2, 5.7).
+ * Primary actions (Kiểm tra trạng thái, Mời lại) are buttons; secondary tools
+ * (Dữ liệu 12 giờ, Lấy biến dữ liệu, Đọc mã OTP, Bắt đầu theo dõi) live in the
+ * "Công cụ khác" dropdown. Result cards only appear after their operation runs.
  *
- * Property 12 / 13 are validated separately by tasks 17.2 / 17.3.
+ * Covers result routing (12.3, 12.4), result replacement (12.5), email
+ * persistence (12.6), and the reinvite confirmation flow (5.2, 5.7).
  */
 
 const VALID_EMAIL = 'user@example.com';
 
-/** Build a stub AccountService whose methods can be overridden per test. */
 function makeAccountService(
   overrides: Partial<AccountService> = {},
 ): AccountService {
@@ -57,7 +51,6 @@ function makeOtpService(overrides: Partial<OTPService> = {}): OTPService {
   };
 }
 
-/** A controllable mock WebSocket service for the monitoring panel. */
 function makeMonitorService(): {
   service: WebSocketService;
   emitMessage: (message: WSMessage) => void;
@@ -99,48 +92,47 @@ function renderDashboard(props: Parameters<typeof DashboardPage>[0] = {}) {
   );
 }
 
-/** Type a valid email and wait for the action buttons to become enabled. */
 async function enterValidEmail(user: ReturnType<typeof userEvent.setup>) {
   const input = screen.getByLabelText('Email address');
   await user.type(input, VALID_EMAIL);
   await waitFor(() =>
     expect(
-      (screen.getByRole('button', { name: 'Kiểm tra trạng thái' }) as HTMLButtonElement)
-        .disabled,
+      (screen.getByRole('button', {
+        name: 'Kiểm tra trạng thái',
+      }) as HTMLButtonElement).disabled,
     ).toBe(false),
   );
 }
 
+/** Open the "Công cụ khác" dropdown and click the tool with the given test id. */
+async function selectTool(
+  user: ReturnType<typeof userEvent.setup>,
+  testId: string,
+) {
+  await user.click(screen.getByRole('button', { name: 'Công cụ khác' }));
+  await user.click(screen.getByTestId(testId));
+}
+
 afterEach(cleanup);
 
-describe('DashboardPage - structure and gating (Req 12.1, 12.2)', () => {
-  it('renders all six quick-action buttons and result panels', () => {
+describe('DashboardPage - structure and gating', () => {
+  it('shows the primary actions and the tools dropdown', () => {
     renderDashboard();
 
-    for (const label of [
-      'Kiểm tra trạng thái',
-      'Dữ liệu 12 giờ',
-      'Lấy biến dữ liệu',
-      'Mời lại',
-      'Đọc mã OTP',
-      'Bắt đầu theo dõi',
-    ]) {
-      expect(screen.getByRole('button', { name: label })).not.toBeNull();
-    }
-
-    for (const title of [
-      'Trạng thái tài khoản',
-      'Dữ liệu 12 giờ',
-      'Biến dữ liệu',
-      'Trạng thái mời lại',
-      'Mã OTP',
-      'Theo dõi thời gian thực',
-    ]) {
-      expect(screen.getByRole('heading', { name: title })).not.toBeNull();
-    }
+    expect(
+      screen.getByRole('button', { name: 'Kiểm tra trạng thái' }),
+    ).not.toBeNull();
+    expect(screen.getByRole('button', { name: 'Mời lại tài khoản' })).not.toBeNull();
+    expect(screen.getByRole('button', { name: 'Công cụ khác' })).not.toBeNull();
   });
 
-  it('disables operation buttons until a valid email is entered', async () => {
+  it('shows an empty placeholder until an operation runs', () => {
+    renderDashboard();
+    // No result regions are rendered before any operation.
+    expect(screen.queryByRole('region', { name: 'Trạng thái tài khoản' })).toBeNull();
+  });
+
+  it('disables actions until a valid email is entered', async () => {
     const user = userEvent.setup();
     renderDashboard();
 
@@ -155,7 +147,7 @@ describe('DashboardPage - structure and gating (Req 12.1, 12.2)', () => {
 });
 
 describe('DashboardPage - result routing (Req 12.3, 12.4)', () => {
-  it('routes a successful account status result into its panel', async () => {
+  it('routes a successful account status result into its panel (readable Vietnamese)', async () => {
     const user = userEvent.setup();
     const accountService = makeAccountService({
       checkAccount: jest
@@ -168,10 +160,12 @@ describe('DashboardPage - result routing (Req 12.3, 12.4)', () => {
     await user.click(screen.getByRole('button', { name: 'Kiểm tra trạng thái' }));
 
     const panel = screen.getByRole('region', { name: 'Trạng thái tài khoản' });
+    // The raw key "status" is shown as the Vietnamese label "Trạng thái",
+    // and the value "active" as the badge "Đang hoạt động".
     await waitFor(() =>
-      expect(within(panel).getByText('status')).not.toBeNull(),
+      expect(within(panel).getByText('Trạng thái')).not.toBeNull(),
     );
-    expect(within(panel).getByText('active')).not.toBeNull();
+    expect(within(panel).getByText('Đang hoạt động')).not.toBeNull();
     expect(accountService.checkAccount).toHaveBeenCalledWith(VALID_EMAIL);
   });
 
@@ -180,7 +174,7 @@ describe('DashboardPage - result routing (Req 12.3, 12.4)', () => {
     const accountService = makeAccountService({
       checkAccount: jest
         .fn()
-        .mockResolvedValue({ success: false, error: 'Account not found' }),
+        .mockResolvedValue({ success: false, error: 'Không tìm thấy tài khoản' }),
     });
     renderDashboard({ accountService });
 
@@ -190,12 +184,12 @@ describe('DashboardPage - result routing (Req 12.3, 12.4)', () => {
     const panel = screen.getByRole('region', { name: 'Trạng thái tài khoản' });
     await waitFor(() =>
       expect(within(panel).getByRole('alert').textContent).toBe(
-        'Account not found',
+        'Không tìm thấy tài khoản',
       ),
     );
   });
 
-  it('renders the OTP value at >=18px in its panel', async () => {
+  it('renders the OTP value only after the OTP tool is used', async () => {
     const user = userEvent.setup();
     const otpService = makeOtpService({
       readOTP: jest.fn().mockResolvedValue({ success: true, otp: '987654' }),
@@ -203,7 +197,10 @@ describe('DashboardPage - result routing (Req 12.3, 12.4)', () => {
     renderDashboard({ otpService });
 
     await enterValidEmail(user);
-    await user.click(screen.getByRole('button', { name: 'Đọc mã OTP' }));
+    // OTP panel is hidden until invoked on demand.
+    expect(screen.queryByTestId('otp-value')).toBeNull();
+
+    await selectTool(user, 'tool-otp');
 
     const otp = await screen.findByTestId('otp-value');
     expect(otp.textContent).toBe('987654');
@@ -217,7 +214,7 @@ describe('DashboardPage - result routing (Req 12.3, 12.4)', () => {
     renderDashboard({ accountService });
 
     await enterValidEmail(user);
-    await user.click(screen.getByRole('button', { name: 'Dữ liệu 12 giờ' }));
+    await selectTool(user, 'tool-12h');
 
     const panel = screen.getByRole('region', { name: 'Dữ liệu 12 giờ' });
     await waitFor(() =>
@@ -231,26 +228,25 @@ describe('DashboardPage - result replacement (Req 12.5)', () => {
     const user = userEvent.setup();
     const checkAccount = jest
       .fn()
-      .mockResolvedValueOnce({ success: true, data: { first: '1' } })
-      .mockResolvedValueOnce({ success: true, data: { second: '2' } });
+      .mockResolvedValueOnce({ success: true, data: { teamName: 'Alpha' } })
+      .mockResolvedValueOnce({ success: true, data: { teamName: 'Beta' } });
     const accountService = makeAccountService({ checkAccount });
     renderDashboard({ accountService });
 
     await enterValidEmail(user);
 
     const button = screen.getByRole('button', { name: 'Kiểm tra trạng thái' });
-    const panel = screen.getByRole('region', { name: 'Trạng thái tài khoản' });
 
     await user.click(button);
-    await waitFor(() => expect(within(panel).getByText('first')).not.toBeNull());
+    let panel = screen.getByRole('region', { name: 'Trạng thái tài khoản' });
+    await waitFor(() => expect(within(panel).getByText('Alpha')).not.toBeNull());
 
     await user.click(button);
-    await waitFor(() =>
-      expect(within(panel).getByText('second')).not.toBeNull(),
-    );
+    panel = screen.getByRole('region', { name: 'Trạng thái tài khoản' });
+    await waitFor(() => expect(within(panel).getByText('Beta')).not.toBeNull());
 
-    // The previous result must be fully gone (Property 13).
-    expect(within(panel).queryByText('first')).toBeNull();
+    // The previous result must be fully gone.
+    expect(within(panel).queryByText('Alpha')).toBeNull();
   });
 });
 
@@ -265,8 +261,8 @@ describe('DashboardPage - email persistence (Req 12.6)', () => {
     const input = screen.getByLabelText('Email address') as HTMLInputElement;
 
     await user.click(screen.getByRole('button', { name: 'Kiểm tra trạng thái' }));
-    await user.click(screen.getByRole('button', { name: 'Lấy biến dữ liệu' }));
-    await user.click(screen.getByRole('button', { name: 'Đọc mã OTP' }));
+    await selectTool(user, 'tool-variables');
+    await selectTool(user, 'tool-otp');
 
     expect(input.value).toBe(VALID_EMAIL);
   });
@@ -277,12 +273,12 @@ describe('DashboardPage - reinvite confirmation flow (Req 5.2, 5.7)', () => {
     const user = userEvent.setup();
     const reinvite = jest
       .fn()
-      .mockResolvedValue({ success: true, message: 'Reinvite sent' });
+      .mockResolvedValue({ success: true, message: 'Đã gửi lời mời' });
     const accountService = makeAccountService({ reinvite });
     renderDashboard({ accountService });
 
     await enterValidEmail(user);
-    await user.click(screen.getByRole('button', { name: 'Mời lại' }));
+    await user.click(screen.getByRole('button', { name: 'Mời lại tài khoản' }));
 
     const dialog = screen.getByRole('dialog');
     expect(dialog.textContent).toContain(VALID_EMAIL);
@@ -293,7 +289,7 @@ describe('DashboardPage - reinvite confirmation flow (Req 5.2, 5.7)', () => {
 
     const panel = screen.getByRole('region', { name: 'Trạng thái mời lại' });
     await waitFor(() =>
-      expect(within(panel).getByText('Reinvite sent')).not.toBeNull(),
+      expect(within(panel).getByText('Đã gửi lời mời')).not.toBeNull(),
     );
   });
 
@@ -304,7 +300,7 @@ describe('DashboardPage - reinvite confirmation flow (Req 5.2, 5.7)', () => {
     renderDashboard({ accountService });
 
     await enterValidEmail(user);
-    await user.click(screen.getByRole('button', { name: 'Mời lại' }));
+    await user.click(screen.getByRole('button', { name: 'Mời lại tài khoản' }));
     await user.click(screen.getByRole('button', { name: 'Hủy' }));
 
     expect(screen.queryByRole('dialog')).toBeNull();
@@ -312,14 +308,14 @@ describe('DashboardPage - reinvite confirmation flow (Req 5.2, 5.7)', () => {
   });
 });
 
-describe('DashboardPage - monitoring panel (Req 12.1)', () => {
+describe('DashboardPage - monitoring panel', () => {
   it('connects on Start Monitoring and renders streamed messages', async () => {
     const user = userEvent.setup();
     const monitor = makeMonitorService();
     renderDashboard({ createMonitor: () => monitor.service });
 
     await enterValidEmail(user);
-    await user.click(screen.getByRole('button', { name: 'Bắt đầu theo dõi' }));
+    await selectTool(user, 'tool-monitor');
     expect(monitor.connect).toHaveBeenCalledWith(VALID_EMAIL);
 
     monitor.emitStatus('connected');
@@ -337,7 +333,7 @@ describe('DashboardPage - monitoring panel (Req 12.1)', () => {
     renderDashboard({ createMonitor: () => monitor.service });
 
     await enterValidEmail(user);
-    await user.click(screen.getByRole('button', { name: 'Bắt đầu theo dõi' }));
+    await selectTool(user, 'tool-monitor');
     monitor.emitStatus('connected');
 
     await user.click(screen.getByRole('button', { name: 'Ngắt kết nối' }));
