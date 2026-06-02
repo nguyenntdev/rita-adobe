@@ -2,6 +2,7 @@ import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import fc from 'fast-check';
 
 import { NotificationProvider } from '../../context/NotificationContext';
+import { ThemeProvider } from '../../context/ThemeContext';
 import { EMAIL_VALIDATION_DEBOUNCE_MS } from '../../components/EmailInput/EmailInput';
 import { validateEmail, EMAIL_MAX_LENGTH } from '../../utils/emailValidation';
 import type {
@@ -55,10 +56,10 @@ const validEmail: fc.Arbitrary<string> = fc
 
 /** Email-driven quick actions that run a single request without a dialog. */
 const OPERATION = fc.constantFrom(
-  'Check Status',
-  'View 12h Data',
-  'Get Variables',
-  'Read OTP',
+  'Kiểm tra trạng thái',
+  'Dữ liệu 12 giờ',
+  'Lấy biến dữ liệu',
+  'Đọc mã OTP',
 );
 
 function makeAccountService(): AccountService {
@@ -114,13 +115,15 @@ describe('DashboardPage — Property 12: Dashboard email persistence', () => {
           expect(validateEmail(email).isValid).toBe(true);
 
           render(
-            <NotificationProvider>
-              <DashboardPage
-                accountService={makeAccountService()}
-                otpService={makeOtpService()}
-                createMonitor={makeMonitorService}
-              />
-            </NotificationProvider>,
+            <ThemeProvider>
+              <NotificationProvider>
+                <DashboardPage
+                  accountService={makeAccountService()}
+                  otpService={makeOtpService()}
+                  createMonitor={makeMonitorService}
+                />
+              </NotificationProvider>
+            </ThemeProvider>,
           );
 
           const input = screen.getByLabelText(

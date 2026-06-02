@@ -53,7 +53,7 @@ describe('ToastNotification component', () => {
       />,
     );
 
-    screen.getByRole('button', { name: /dismiss notification/i }).click();
+    screen.getByRole('button', { name: /đóng thông báo/i }).click();
     expect(onDismiss).toHaveBeenCalledWith('t-close');
   });
 
@@ -185,7 +185,7 @@ describe('ToastContainer', () => {
     });
 
     act(() => {
-      screen.getByRole('button', { name: /dismiss notification/i }).click();
+      screen.getByRole('button', { name: /đóng thông báo/i }).click();
     });
 
     expect(screen.queryByTestId('toast-notification')).not.toBeInTheDocument();
@@ -236,7 +236,7 @@ describe('ToastContainer', () => {
 
     // Stack is newest-on-top: gamma, beta, alpha. Dismiss the middle one.
     const closeButtons = screen.getAllByRole('button', {
-      name: /dismiss notification/i,
+      name: /đóng thông báo/i,
     });
     expect(closeButtons).toHaveLength(3);
     act(() => {

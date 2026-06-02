@@ -44,6 +44,38 @@ function getFocusableElements(container: HTMLElement): HTMLElement[] {
 }
 
 /**
+ * Returns the inline style for a dialog button by variant, using design tokens
+ * so the buttons adapt to the active theme.
+ */
+function dialogButtonStyle(
+  variant: 'primary' | 'secondary',
+): import('react').CSSProperties {
+  const base: import('react').CSSProperties = {
+    height: 36,
+    padding: '0 16px',
+    borderRadius: 'var(--radius-m)',
+    fontSize: 'var(--fs-300)',
+    fontWeight: 600,
+    cursor: 'pointer',
+    border: '1px solid transparent',
+  };
+  if (variant === 'primary') {
+    return {
+      ...base,
+      backgroundColor: 'var(--brand-60)',
+      borderColor: 'var(--brand-60)',
+      color: 'var(--brand-foreground)',
+    };
+  }
+  return {
+    ...base,
+    backgroundColor: 'var(--bg-layer)',
+    borderColor: 'var(--stroke-strong)',
+    color: 'var(--fg-default)',
+  };
+}
+
+/**
  * Accessible modal dialog for confirming or cancelling an action.
  *
  * Implements focus management per the design's accessibility requirements:
@@ -146,7 +178,8 @@ export function ConfirmDialog({
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        backgroundColor: 'rgba(0, 0, 0, 0.4)',
+        backdropFilter: 'blur(2px)',
         zIndex: 1000,
       }}
     >
@@ -160,33 +193,42 @@ export function ConfirmDialog({
         // Stop backdrop click handler firing when interacting with the dialog.
         onClick={(event) => event.stopPropagation()}
         style={{
-          backgroundColor: '#ffffff',
-          borderRadius: 8,
-          padding: '1.5rem',
+          backgroundColor: 'var(--bg-layer)',
+          color: 'var(--fg-default)',
+          borderRadius: 'var(--radius-l)',
+          padding: 'var(--sp-xl)',
           minWidth: 320,
           maxWidth: 480,
-          boxShadow: '0 10px 25px rgba(0, 0, 0, 0.25)',
+          boxShadow: 'var(--shadow-16)',
+          border: '1px solid var(--stroke)',
         }}
       >
-        <h2 id={titleId} style={{ marginTop: 0 }}>
+        <h2 id={titleId} style={{ marginTop: 0, fontSize: 'var(--fs-500)' }}>
           {title}
         </h2>
-        <p id={messageId}>{message}</p>
+        <p id={messageId} style={{ color: 'var(--fg-secondary)' }}>
+          {message}
+        </p>
         <div
           style={{
             display: 'flex',
             justifyContent: 'flex-end',
-            gap: '0.5rem',
-            marginTop: '1.5rem',
+            gap: 'var(--sp-s)',
+            marginTop: 'var(--sp-xl)',
           }}
         >
-          <button type="button" onClick={onCancel}>
+          <button
+            type="button"
+            onClick={onCancel}
+            style={dialogButtonStyle('secondary')}
+          >
             {cancelLabel}
           </button>
           <button
             ref={confirmButtonRef}
             type="button"
             onClick={onConfirm}
+            style={dialogButtonStyle('primary')}
           >
             {confirmLabel}
           </button>

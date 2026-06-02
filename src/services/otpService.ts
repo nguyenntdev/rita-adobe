@@ -1,35 +1,41 @@
 /**
  * OTP service.
  *
- * Reads one-time passwords for an account from the ADES Support API.
- * `readOTP` issues a request to `/mail/read-otp-gpm?email={email}`
- * (Requirement 6.2) and normalizes the outcome into an {@link OTPResult}:
+ * Reads one-time passwords for an account from the live ADES Support API.
+ * Verified contract (probed against the running API):
+ *   GET `/mail/read-otp-gpm?email={email}` ->
+ *     `{ status, message, data: { success, error?, otp?/code? } }`
  *
- *  - success with an `otp` value when the API returns an OTP,
- *  - success WITHOUT an `otp` value for the "no OTP found" state
- *    (Requirement 6.4),
- *  - failure carrying the API-provided error message when the request fails
- *    (Requirement 6.5).
+ * When no code email exists the API returns `data: { success: false, error }`
+ * (a Vietnamese/English reason), which maps to the "no OTP found" state.
  *
- * It builds on the shared {@link httpClient}, so the request automatically
- * carries the `Authorization` header and inherits the standard error mapping.
+ * The bearer token required by the endpoint is attached automatically by the
+ * shared HTTP client.
  */
 import type { OTPResult, OTPService } from '../types';
 
 import { httpClient, HttpError } from '../infrastructure/httpClient';
 
-/** Path for the OTP read endpoint (Requirement 6.2). */
+/** Path for the OTP read endpoint. */
 const READ_OTP_PATH = '/mail/read-otp-gpm';
 
+/** Unwrap the `{ status, message, data }` envelope to the inner payload. */
+function unwrapEnvelope(body: unknown): unknown {
+  if (
+    body !== null &&
+    typeof body === 'object' &&
+    !Array.isArray(body) &&
+    'data' in (body as Record<string, unknown>)
+  ) {
+    return (body as Record<string, unknown>).data;
+  }
+  return body;
+}
+
 /**
- * Extract the OTP value from an API response payload.
- *
- * Supports the common response shapes returned by the endpoint:
- *  - a bare string OTP,
- *  - an object exposing the OTP under `otp`, `code`, or `value`.
- *
- * Returns `undefined` when no usable OTP is present, which the caller maps to
- * the "no OTP found" state (Requirement 6.4).
+ * Extract the OTP value from a payload. Supports a bare string or an object
+ * exposing the OTP under `otp`, `code`, or `value`. Returns `undefined` when no
+ * usable OTP is present.
  */
 function extractOtp(data: unknown): string | undefined {
   if (typeof data === 'string') {
@@ -56,7 +62,6 @@ function extractOtp(data: unknown): string | undefined {
 /**
  * Read the OTP for the given email.
  *
- * @param email The account email to read the OTP for.
  * @returns An {@link OTPResult} describing the OTP value, the no-OTP state, or
  *   the failure reason.
  */
@@ -66,22 +71,33 @@ export async function readOTP(email: string): Promise<OTPResult> {
       params: { email },
     });
 
-    const otp = extractOtp(response.data);
+    const payload = unwrapEnvelope(response.data);
+
+    // The inner payload may itself signal failure (no code email found).
+    if (
+      payload !== null &&
+      typeof payload === 'object' &&
+      (payload as Record<string, unknown>).success === false
+    ) {
+      const inner = (payload as Record<string, unknown>).error;
+      // Treat "no code found" as the no-OTP state rather than a hard error.
+      return { success: true, error: typeof inner === 'string' ? inner : undefined };
+    }
+
+    const otp = extractOtp(payload);
     if (otp === undefined) {
-      // Successful request but no OTP available (Requirement 6.4).
+      // Successful request but no OTP available.
       return { success: true };
     }
 
     return { success: true, otp };
   } catch (error) {
-    // Surface the API-provided failure reason when available, otherwise the
-    // mapped user-facing message (Requirement 6.5).
     if (error instanceof HttpError) {
       return { success: false, error: error.apiMessage ?? error.userMessage };
     }
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to read OTP.',
+      error: error instanceof Error ? error.message : 'Không đọc được OTP.',
     };
   }
 }

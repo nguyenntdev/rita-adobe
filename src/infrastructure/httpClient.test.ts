@@ -1,38 +1,24 @@
 /**
- * Unit tests for the HTTP client infrastructure (Task 4.3).
+ * Unit tests for the HTTP client infrastructure.
  *
  * Covers:
- *  - 401 handling on the authenticated `httpClient`: the session token is
- *    cleared (via the session store) and a redirect-to-login is signalled
- *    (Requirement 1.6).
- *  - The external `variableClient` does NOT clear the session or redirect on
- *    401, since it is unauthenticated (Requirement 1.6 scoping / 4.2).
+ *  - Automatic token attachment: the client fetches a token from
+ *    `/ades-support/auth/token` and injects it as a Bearer header.
+ *  - 401 handling: the cached token is dropped and the request is retried once
+ *    with a fresh token.
  *  - `mapAxiosError` maps network, timeout, 400, 404, and 500 failures to the
- *    correct user-facing messages per the design's error-handling table
- *    (Requirements 10.3, 10.4).
+ *    correct user-facing messages.
  */
-import { AxiosError, AxiosHeaders, type AxiosInstance } from 'axios';
+import { AxiosError, AxiosHeaders } from 'axios';
 
 import {
+  clearCachedToken,
   ERROR_MESSAGES,
   HttpError,
   httpClient,
   mapAxiosError,
-  setUnauthorizedHandler,
-  variableClient,
+  tokenClient,
 } from './httpClient';
-import { clearToken, getToken } from './sessionStore';
-
-// The session store is mocked so we can assert token-clearing on 401 without
-// touching real `sessionStorage`, and so the request interceptor never injects
-// a real token.
-jest.mock('./sessionStore', () => ({
-  clearToken: jest.fn(() => true),
-  getToken: jest.fn(() => null),
-}));
-
-const mockedClearToken = clearToken as jest.Mock;
-const mockedGetToken = getToken as jest.Mock;
 
 /**
  * Build an `AxiosError`. When `status` is provided a `response` is attached;
@@ -57,81 +43,89 @@ function makeAxiosError(opts: {
   return new AxiosError('request failed', opts.code, config, {}, response);
 }
 
-// Preserve the real adapters so each test can install a rejecting adapter and
-// then restore the originals, keeping the shared instances clean.
 const originalHttpAdapter = httpClient.defaults.adapter;
-const originalVariableAdapter = variableClient.defaults.adapter;
+const originalTokenAdapter = tokenClient.defaults.adapter;
 
-/** Install an adapter that rejects every request with `error`. */
-function rejectWith(client: AxiosInstance, error: AxiosError): void {
-  client.defaults.adapter = jest.fn(() => Promise.reject(error));
+/** Stub the token endpoint to return sequential tokens. */
+function stubTokenClient(): () => number {
+  let calls = 0;
+  tokenClient.defaults.adapter = jest.fn((config) => {
+    calls += 1;
+    return Promise.resolve({
+      data: { data: { token: `tok-${calls}`, expiresIn: 600 } },
+      status: 201,
+      statusText: 'Created',
+      headers: {},
+      config,
+    } as never);
+  });
+  return () => calls;
 }
 
 beforeEach(() => {
   jest.clearAllMocks();
-  mockedGetToken.mockReturnValue(null);
+  clearCachedToken();
 });
 
 afterEach(() => {
-  setUnauthorizedHandler(null);
   httpClient.defaults.adapter = originalHttpAdapter;
-  variableClient.defaults.adapter = originalVariableAdapter;
+  tokenClient.defaults.adapter = originalTokenAdapter;
+  clearCachedToken();
 });
 
-describe('httpClient 401 handling (Requirement 1.6)', () => {
-  it('clears the session token and invokes the redirect handler on 401', async () => {
-    const redirect = jest.fn();
-    setUnauthorizedHandler(redirect);
-    rejectWith(httpClient, makeAxiosError({ status: 401, data: { error: 'expired' } }));
-
-    await expect(httpClient.get('/ades-support/account/check')).rejects.toMatchObject({
-      userMessage: ERROR_MESSAGES.unauthorized,
-      status: 401,
+describe('httpClient automatic token + 401 retry', () => {
+  it('fetches a token and attaches it as a Bearer header', async () => {
+    stubTokenClient();
+    const seen: string[] = [];
+    httpClient.defaults.adapter = jest.fn((config) => {
+      const auth = new AxiosHeaders(config.headers).get('Authorization');
+      seen.push(String(auth));
+      return Promise.resolve({
+        data: { ok: true },
+        status: 200,
+        statusText: 'OK',
+        headers: {},
+        config,
+      } as never);
     });
 
-    expect(mockedClearToken).toHaveBeenCalledTimes(1);
-    expect(redirect).toHaveBeenCalledTimes(1);
-  });
-
-  it('rejects with an HttpError carrying the unauthorized message on 401', async () => {
-    setUnauthorizedHandler(jest.fn());
-    rejectWith(httpClient, makeAxiosError({ status: 401, data: {} }));
-
-    await expect(httpClient.get('/x')).rejects.toBeInstanceOf(HttpError);
-  });
-
-  it('does NOT clear the session or redirect on a non-401 failure', async () => {
-    const redirect = jest.fn();
-    setUnauthorizedHandler(redirect);
-    rejectWith(httpClient, makeAxiosError({ status: 500, data: {} }));
-
-    await expect(httpClient.get('/x')).rejects.toMatchObject({
-      userMessage: ERROR_MESSAGES.serverError,
-      status: 500,
+    const res = await httpClient.post('/ades-support/account/check', {
+      email: 'a@b.co',
     });
 
-    expect(mockedClearToken).not.toHaveBeenCalled();
-    expect(redirect).not.toHaveBeenCalled();
+    expect(res.data).toEqual({ ok: true });
+    expect(seen).toEqual(['Bearer tok-1']);
+  });
+
+  it('drops the cached token and retries once with a fresh token on 401', async () => {
+    const tokenCalls = stubTokenClient();
+    let protectedCalls = 0;
+    httpClient.defaults.adapter = jest.fn((config) => {
+      protectedCalls += 1;
+      // First protected call 401s; the retry (with a fresh token) succeeds.
+      if (protectedCalls === 1) {
+        return Promise.reject(makeAxiosError({ status: 401, data: {} }));
+      }
+      return Promise.resolve({
+        data: { ok: true },
+        status: 200,
+        statusText: 'OK',
+        headers: {},
+        config,
+      } as never);
+    });
+
+    const res = await httpClient.post('/ades-support/account/check', {
+      email: 'a@b.co',
+    });
+
+    expect(res.data).toEqual({ ok: true });
+    expect(protectedCalls).toBe(2); // original + one retry
+    expect(tokenCalls()).toBeGreaterThanOrEqual(2); // refetched after 401
   });
 });
 
-describe('variableClient 401 handling (Requirement 1.6 scoping)', () => {
-  it('maps the 401 error but does not clear the session or redirect', async () => {
-    const redirect = jest.fn();
-    setUnauthorizedHandler(redirect);
-    rejectWith(variableClient, makeAxiosError({ status: 401, data: {} }));
-
-    await expect(variableClient.get('/user%40example.com')).rejects.toMatchObject({
-      userMessage: ERROR_MESSAGES.unauthorized,
-      status: 401,
-    });
-
-    expect(mockedClearToken).not.toHaveBeenCalled();
-    expect(redirect).not.toHaveBeenCalled();
-  });
-});
-
-describe('mapAxiosError error-table mapping (Requirements 10.3, 10.4)', () => {
+describe('mapAxiosError error-table mapping', () => {
   it('maps a timeout (ECONNABORTED) to the timeout message', () => {
     const result = mapAxiosError(makeAxiosError({ code: AxiosError.ECONNABORTED }));
 

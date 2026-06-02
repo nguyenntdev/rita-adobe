@@ -1,10 +1,4 @@
-import {
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-  type CSSProperties,
-} from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { ActionButton } from '../../components/ActionButton';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
@@ -13,11 +7,13 @@ import { EmailInput } from '../../components/EmailInput';
 import { KeyValueDisplay } from '../../components/KeyValueDisplay';
 import { MonitorPanel } from '../../components/MonitorPanel';
 import { ResultPanel } from '../../components/ResultPanel';
+import { ThemeToggle } from '../../components/ThemeToggle/ThemeToggle';
 import { useNotifications } from '../../context/NotificationContext';
 import { accountService as defaultAccountService } from '../../services/accountService';
 import { otpService as defaultOtpService } from '../../services/otpService';
 import { createWebSocketService } from '../../services/webSocketService';
 import { appendMessage, MAX_QUEUE_SIZE } from '../../utils/messageQueue';
+import { vi } from '../../i18n/vi';
 import type {
   Account12hRecord,
   AccountService,
@@ -26,31 +22,25 @@ import type {
   WebSocketService,
   WSMessage,
 } from '../../types';
+import './DashboardPage.css';
 
 /**
- * Unified account dashboard (design "DashboardPage", task 17.1).
+ * Unified, Vietnamese-first account dashboard (Fluent 2 design).
  *
- * Presents a single, persisted {@link EmailInput} alongside quick-action
- * buttons for every account operation and a dedicated result panel for each:
- * Account Status, 12-Hour Data, Variables, Reinvite Status, OTP, and Monitoring
- * (Requirements 12.1, 12.2).
+ * A single screen with a top app bar (brand + light/dark theme toggle), one
+ * persisted email field with quick-action buttons, and a responsive grid of
+ * dedicated result cards: Trạng thái tài khoản, Dữ liệu 12 giờ, Biến dữ liệu,
+ * Trạng thái mời lại, Mã OTP, Theo dõi thời gian thực.
  *
  * Behaviour:
- *   - Each operation's success result is routed into its corresponding panel,
- *     and each failure renders the API error message in that same panel
- *     (Requirements 12.3, 12.4). Triggering an operation again first resets its
- *     panel to the loading state, so the previous result is fully replaced with
- *     no remnants (Requirement 12.5 / Property 13).
- *   - The email field value lives in this component's state and is never reset
- *     by any operation, so it persists across operations within the session
- *     until the user edits it (Requirement 12.6 / Property 12).
- *   - Reinvite is gated behind a {@link ConfirmDialog} that names the exact
- *     target email; cancelling issues no request.
- *   - Success/error feedback is also surfaced as toasts via the
- *     {@link useNotifications} context.
+ *   - Each operation routes its success/error result into its own card and
+ *     replaces any previous result there.
+ *   - The email value persists across operations until the user edits it.
+ *   - Reinvite is gated behind a confirmation dialog naming the exact email.
+ *   - Success/error feedback is also surfaced as toasts.
  *
- * The account/OTP services and the monitor factory are injectable (defaulting
- * to the real implementations) so the page can be exercised in isolation.
+ * The services and monitor factory are injectable (defaulting to the real
+ * implementations) so the page can be exercised in isolation.
  */
 
 /** Discriminated async state shared by the request-backed panels. */
@@ -62,53 +52,11 @@ type AsyncState<T> =
 
 const IDLE: AsyncState<never> = { status: 'idle' };
 
-/** Fallback message used when an API error carries no reason. */
-const UNKNOWN_ERROR = 'An unexpected error occurred.';
-
 export interface DashboardPageProps {
-  /** Account operations service (defaults to the shared accountService). */
   accountService?: AccountService;
-  /** OTP service (defaults to the shared otpService). */
   otpService?: OTPService;
-  /**
-   * Factory producing the monitoring WebSocket service. Defaults to
-   * {@link createWebSocketService} so each mounted dashboard owns its own
-   * connection.
-   */
   createMonitor?: () => WebSocketService;
 }
-
-const containerStyle: CSSProperties = {
-  display: 'flex',
-  flexDirection: 'column',
-  gap: 16,
-  padding: 16,
-};
-
-const controlsStyle: CSSProperties = {
-  display: 'flex',
-  flexDirection: 'column',
-  gap: 12,
-};
-
-const buttonRowStyle: CSSProperties = {
-  display: 'flex',
-  flexWrap: 'wrap',
-  gap: 8,
-};
-
-const panelGridStyle: CSSProperties = {
-  display: 'grid',
-  gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-  gap: 16,
-};
-
-const otpValueStyle: CSSProperties = {
-  fontSize: 18,
-  fontWeight: 700,
-  fontFamily: 'monospace',
-  color: '#111827',
-};
 
 export function DashboardPage({
   accountService = defaultAccountService,
@@ -117,12 +65,11 @@ export function DashboardPage({
 }: DashboardPageProps = {}) {
   const { showSuccess, showError } = useNotifications();
 
-  // Persisted email shared by every operation (Requirement 12.6 / Property 12).
+  // Persisted email shared by every operation.
   const [email, setEmail] = useState('');
   const [isEmailValid, setIsEmailValid] = useState(false);
 
-  // Per-panel result state. Replacing the whole state object on each operation
-  // guarantees the prior result is dropped (Requirement 12.5 / Property 13).
+  // Per-panel result state; replacing the whole object drops prior results.
   const [accountStatus, setAccountStatus] = useState<
     AsyncState<Record<string, unknown>>
   >(IDLE);
@@ -133,10 +80,8 @@ export function DashboardPage({
     AsyncState<Record<string, unknown>>
   >(IDLE);
   const [reinviteState, setReinviteState] = useState<AsyncState<string>>(IDLE);
-  // OTP success carries an optional value: absent means "no OTP found".
   const [otpState, setOtpState] = useState<AsyncState<{ otp?: string }>>(IDLE);
 
-  // Reinvite confirmation dialog visibility.
   const [isReinviteDialogOpen, setIsReinviteDialogOpen] = useState(false);
 
   // Monitoring panel state.
@@ -144,7 +89,6 @@ export function DashboardPage({
   const [monitorStatus, setMonitorStatus] =
     useState<ConnectionStatus>('disconnected');
 
-  // One monitor service instance per mounted dashboard.
   const monitorRef = useRef<WebSocketService | null>(null);
   if (monitorRef.current === null) {
     monitorRef.current = createMonitor();
@@ -160,10 +104,7 @@ export function DashboardPage({
         appendMessage(current, message, MAX_QUEUE_SIZE),
       );
     });
-    monitor.onStatusChange((status) => {
-      setMonitorStatus(status);
-    });
-    // Tear down the connection when the dashboard unmounts.
+    monitor.onStatusChange((status) => setMonitorStatus(status));
     return () => {
       monitor.disconnect();
     };
@@ -174,11 +115,11 @@ export function DashboardPage({
     const result = await accountService.checkAccount(email);
     if (result.success) {
       setAccountStatus({ status: 'success', data: result.data ?? {} });
-      showSuccess('Account status check completed.');
+      showSuccess(vi.toast.checkStatusOk);
     } else {
-      const error = result.error ?? UNKNOWN_ERROR;
+      const error = result.error ?? vi.toast.unknownError;
       setAccountStatus({ status: 'error', error });
-      showError(`Account status check failed: ${error}`);
+      showError(`${vi.toast.checkStatusFail}: ${error}`);
     }
   }, [accountService, email, showSuccess, showError]);
 
@@ -187,11 +128,11 @@ export function DashboardPage({
     const result = await accountService.getAccount12h(email);
     if (result.success) {
       setAccount12h({ status: 'success', data: result.data ?? [] });
-      showSuccess('12-hour data retrieval completed.');
+      showSuccess(vi.toast.view12hOk);
     } else {
-      const error = result.error ?? UNKNOWN_ERROR;
+      const error = result.error ?? vi.toast.unknownError;
       setAccount12h({ status: 'error', error });
-      showError(`12-hour data retrieval failed: ${error}`);
+      showError(`${vi.toast.view12hFail}: ${error}`);
     }
   }, [accountService, email, showSuccess, showError]);
 
@@ -200,21 +141,19 @@ export function DashboardPage({
     const result = await accountService.getVariables(email);
     if (result.success) {
       setVariables({ status: 'success', data: result.data ?? {} });
-      showSuccess('Variable data retrieval completed.');
+      showSuccess(vi.toast.variablesOk);
     } else {
-      const error = result.error ?? UNKNOWN_ERROR;
+      const error = result.error ?? vi.toast.unknownError;
       setVariables({ status: 'error', error });
-      showError(`Variable data retrieval failed: ${error}`);
+      showError(`${vi.toast.variablesFail}: ${error}`);
     }
   }, [accountService, email, showSuccess, showError]);
 
-  // Reinvite opens a confirmation dialog; the request is only issued on confirm.
   const handleReinviteClick = useCallback(() => {
     setIsReinviteDialogOpen(true);
   }, []);
 
   const handleReinviteCancel = useCallback(() => {
-    // Cancelling aborts the operation without changing any state (Req 5.7).
     setIsReinviteDialogOpen(false);
   }, []);
 
@@ -223,13 +162,13 @@ export function DashboardPage({
     setReinviteState({ status: 'loading' });
     const result = await accountService.reinvite(email);
     if (result.success) {
-      const message = result.message ?? `Reinvite sent to ${email}.`;
+      const message = result.message ?? vi.toast.reinviteOk;
       setReinviteState({ status: 'success', data: message });
-      showSuccess(`Reinvite completed: ${message}`);
+      showSuccess(message);
     } else {
-      const error = result.error ?? UNKNOWN_ERROR;
+      const error = result.error ?? vi.toast.unknownError;
       setReinviteState({ status: 'error', error });
-      showError(`Reinvite failed: ${error}`);
+      showError(`${vi.toast.reinviteFail}: ${error}`);
     }
   }, [accountService, email, showSuccess, showError]);
 
@@ -238,11 +177,11 @@ export function DashboardPage({
     const result = await otpService.readOTP(email);
     if (result.success) {
       setOtpState({ status: 'success', data: { otp: result.otp } });
-      showSuccess('OTP read completed.');
+      showSuccess(vi.toast.otpOk);
     } else {
-      const error = result.error ?? UNKNOWN_ERROR;
+      const error = result.error ?? vi.toast.unknownError;
       setOtpState({ status: 'error', error });
-      showError(`OTP read failed: ${error}`);
+      showError(`${vi.toast.otpFail}: ${error}`);
     }
   }, [otpService, email, showSuccess, showError]);
 
@@ -251,8 +190,6 @@ export function DashboardPage({
     if (!monitor) {
       return;
     }
-    // Replace any prior session's messages so the panel reflects the new
-    // connection only (Requirement 12.5 / Property 13).
     setMonitorMessages([]);
     monitor.connect(email);
   }, [email]);
@@ -261,164 +198,223 @@ export function DashboardPage({
     monitorRef.current?.disconnect();
   }, []);
 
-  // Buttons are enabled only for a valid email; loading is tracked per action
-  // so each button reflects only its own in-flight request (Property 6).
+  const handleCopyOtp = useCallback(
+    async (otp: string) => {
+      try {
+        if (!navigator.clipboard?.writeText) {
+          throw new Error('clipboard unavailable');
+        }
+        await navigator.clipboard.writeText(otp);
+        showSuccess(vi.toast.otpCopied);
+      } catch {
+        showError(vi.toast.otpCopyFail);
+      }
+    },
+    [showSuccess, showError],
+  );
+
   const actionsDisabled = !isEmailValid;
 
   return (
-    <div style={containerStyle} data-testid="dashboard-page">
-      <h1>Account Dashboard</h1>
-
-      <div style={controlsStyle}>
-        <EmailInput
-          value={email}
-          onChange={setEmail}
-          onValidationChange={setIsEmailValid}
-          placeholder="Enter an account email"
-        />
-
-        <div style={buttonRowStyle} role="group" aria-label="Account operations">
-          <ActionButton
-            label="Check Status"
-            onClick={handleCheckStatus}
-            disabled={actionsDisabled}
-            loading={accountStatus.status === 'loading'}
-          />
-          <ActionButton
-            label="View 12h Data"
-            onClick={handleView12h}
-            disabled={actionsDisabled}
-            loading={account12h.status === 'loading'}
-          />
-          <ActionButton
-            label="Get Variables"
-            onClick={handleGetVariables}
-            disabled={actionsDisabled}
-            loading={variables.status === 'loading'}
-          />
-          <ActionButton
-            label="Reinvite"
-            onClick={handleReinviteClick}
-            disabled={actionsDisabled}
-            loading={reinviteState.status === 'loading'}
-            variant="secondary"
-          />
-          <ActionButton
-            label="Read OTP"
-            onClick={handleReadOtp}
-            disabled={actionsDisabled}
-            loading={otpState.status === 'loading'}
-          />
-          <ActionButton
-            label="Start Monitoring"
-            onClick={handleStartMonitoring}
-            disabled={actionsDisabled}
-            loading={monitorStatus === 'connecting'}
-          />
+    <div className="app-shell">
+      <header className="app-bar">
+        <div className="app-bar__brand">
+          <span className="app-bar__logo" aria-hidden="true">
+            R
+          </span>
+          <div>
+            <div className="app-bar__title">{vi.app.name}</div>
+            <div className="app-bar__tagline">{vi.app.tagline}</div>
+          </div>
         </div>
-      </div>
+        <ThemeToggle />
+      </header>
 
-      <div style={panelGridStyle}>
-        <ResultPanel
-          title="Account Status"
-          loading={accountStatus.status === 'loading'}
-          error={
-            accountStatus.status === 'error' ? accountStatus.error : undefined
-          }
-        >
-          {accountStatus.status === 'success' ? (
-            <KeyValueDisplay
-              data={accountStatus.data}
-              label="Account status"
-              emptyMessage="No account status data available."
-            />
-          ) : null}
-        </ResultPanel>
+      <main className="dashboard" data-testid="dashboard-page">
+        <section className="dashboard__command">
+          <div className="dashboard__command-header">
+            <h1 className="dashboard__command-title">{vi.app.tagline}</h1>
+            <p className="dashboard__command-hint">{vi.empty.initial}</p>
+          </div>
 
-        <ResultPanel
-          title="12-Hour Data"
-          loading={account12h.status === 'loading'}
-          error={account12h.status === 'error' ? account12h.error : undefined}
-        >
-          {account12h.status === 'success' ? (
-            <DataTable
-              records={account12h.data}
-              label="12-hour data"
-              emptyMessage="No data available for the specified account."
-            />
-          ) : null}
-        </ResultPanel>
-
-        <ResultPanel
-          title="Variables"
-          loading={variables.status === 'loading'}
-          error={variables.status === 'error' ? variables.error : undefined}
-        >
-          {variables.status === 'success' ? (
-            <KeyValueDisplay
-              data={variables.data}
-              label="Variable data"
-              emptyMessage="No variable data available for the specified email."
-            />
-          ) : null}
-        </ResultPanel>
-
-        <ResultPanel
-          title="Reinvite Status"
-          loading={reinviteState.status === 'loading'}
-          error={
-            reinviteState.status === 'error' ? reinviteState.error : undefined
-          }
-        >
-          {reinviteState.status === 'success' ? (
-            <p data-testid="reinvite-message">{reinviteState.data}</p>
-          ) : null}
-        </ResultPanel>
-
-        <ResultPanel
-          title="OTP"
-          loading={otpState.status === 'loading'}
-          error={otpState.status === 'error' ? otpState.error : undefined}
-        >
-          {otpState.status === 'success' ? (
-            otpState.data.otp !== undefined ? (
-              <span data-testid="otp-value" style={otpValueStyle}>
-                {otpState.data.otp}
-              </span>
-            ) : (
-              <p data-testid="otp-empty">No OTP found for the specified email.</p>
-            )
-          ) : null}
-        </ResultPanel>
-
-        <ResultPanel title="Monitoring">
-          <div
-            style={{ display: 'flex', flexDirection: 'column', gap: 8 }}
-            data-testid="monitor-controls"
-          >
-            <ActionButton
-              label="Disconnect"
-              onClick={handleStopMonitoring}
-              disabled={
-                monitorStatus === 'disconnected' || monitorStatus === 'error'
-              }
-              variant="danger"
-            />
-            <MonitorPanel
-              messages={monitorMessages}
-              maxMessages={MAX_QUEUE_SIZE}
-              status={monitorStatus}
+          <div className="dashboard__email">
+            <EmailInput
+              value={email}
+              onChange={setEmail}
+              onValidationChange={setIsEmailValid}
+              placeholder={vi.email.placeholder}
             />
           </div>
-        </ResultPanel>
-      </div>
+
+          <div
+            className="dashboard__actions"
+            role="group"
+            aria-label="Thao tác tài khoản"
+          >
+            <ActionButton
+              label={vi.actions.checkStatus}
+              onClick={handleCheckStatus}
+              disabled={actionsDisabled}
+              loading={accountStatus.status === 'loading'}
+            />
+            <ActionButton
+              label={vi.actions.view12h}
+              onClick={handleView12h}
+              disabled={actionsDisabled}
+              loading={account12h.status === 'loading'}
+              variant="secondary"
+            />
+            <ActionButton
+              label={vi.actions.getVariables}
+              onClick={handleGetVariables}
+              disabled={actionsDisabled}
+              loading={variables.status === 'loading'}
+              variant="secondary"
+            />
+            <ActionButton
+              label={vi.actions.reinvite}
+              onClick={handleReinviteClick}
+              disabled={actionsDisabled}
+              loading={reinviteState.status === 'loading'}
+              variant="secondary"
+            />
+            <ActionButton
+              label={vi.actions.readOtp}
+              onClick={handleReadOtp}
+              disabled={actionsDisabled}
+              loading={otpState.status === 'loading'}
+              variant="secondary"
+            />
+            <ActionButton
+              label={vi.actions.startMonitoring}
+              onClick={handleStartMonitoring}
+              disabled={actionsDisabled}
+              loading={monitorStatus === 'connecting'}
+              variant="secondary"
+            />
+          </div>
+        </section>
+
+        <div className="dashboard__grid">
+          <ResultPanel
+            title={vi.panels.accountStatus}
+            loading={accountStatus.status === 'loading'}
+            error={
+              accountStatus.status === 'error' ? accountStatus.error : undefined
+            }
+          >
+            {accountStatus.status === 'success' ? (
+              <KeyValueDisplay
+                data={accountStatus.data}
+                label={vi.panels.accountStatus}
+                emptyMessage={vi.empty.accountStatus}
+              />
+            ) : (
+              <p className="panel-empty">{vi.empty.accountStatus}</p>
+            )}
+          </ResultPanel>
+
+          <ResultPanel
+            title={vi.panels.account12h}
+            loading={account12h.status === 'loading'}
+            error={account12h.status === 'error' ? account12h.error : undefined}
+          >
+            {account12h.status === 'success' ? (
+              <DataTable
+                records={account12h.data}
+                label={vi.panels.account12h}
+                emptyMessage={vi.empty.account12h}
+              />
+            ) : (
+              <p className="panel-empty">{vi.empty.account12h}</p>
+            )}
+          </ResultPanel>
+
+          <ResultPanel
+            title={vi.panels.variables}
+            loading={variables.status === 'loading'}
+            error={variables.status === 'error' ? variables.error : undefined}
+          >
+            {variables.status === 'success' ? (
+              <KeyValueDisplay
+                data={variables.data}
+                label={vi.panels.variables}
+                emptyMessage={vi.empty.variables}
+              />
+            ) : (
+              <p className="panel-empty">{vi.empty.variables}</p>
+            )}
+          </ResultPanel>
+
+          <ResultPanel
+            title={vi.panels.reinvite}
+            loading={reinviteState.status === 'loading'}
+            error={
+              reinviteState.status === 'error' ? reinviteState.error : undefined
+            }
+          >
+            {reinviteState.status === 'success' ? (
+              <p className="reinvite-message" data-testid="reinvite-message">
+                {reinviteState.data}
+              </p>
+            ) : (
+              <p className="panel-empty">{vi.empty.initial}</p>
+            )}
+          </ResultPanel>
+
+          <ResultPanel
+            title={vi.panels.otp}
+            loading={otpState.status === 'loading'}
+            error={otpState.status === 'error' ? otpState.error : undefined}
+          >
+            {otpState.status === 'success' ? (
+              otpState.data.otp !== undefined ? (
+                <div className="otp-result">
+                  <span className="otp-result__value" data-testid="otp-value">
+                    {otpState.data.otp}
+                  </span>
+                  <ActionButton
+                    label={vi.actions.copy}
+                    onClick={() => handleCopyOtp(otpState.data.otp as string)}
+                    variant="secondary"
+                  />
+                </div>
+              ) : (
+                <p className="panel-empty" data-testid="otp-empty">
+                  {vi.empty.otp}
+                </p>
+              )
+            ) : (
+              <p className="panel-empty">{vi.empty.otp}</p>
+            )}
+          </ResultPanel>
+
+          <ResultPanel title={vi.panels.monitoring}>
+            <div className="monitor-controls" data-testid="monitor-controls">
+              <ActionButton
+                label={vi.actions.disconnect}
+                onClick={handleStopMonitoring}
+                disabled={
+                  monitorStatus === 'disconnected' || monitorStatus === 'error'
+                }
+                variant="danger"
+              />
+              <MonitorPanel
+                messages={monitorMessages}
+                maxMessages={MAX_QUEUE_SIZE}
+                status={monitorStatus}
+              />
+            </div>
+          </ResultPanel>
+        </div>
+      </main>
 
       <ConfirmDialog
         isOpen={isReinviteDialogOpen}
-        title="Confirm Reinvite"
-        message={`Send a reinvite to ${email}?`}
-        confirmLabel="Send Reinvite"
-        cancelLabel="Cancel"
+        title={vi.reinviteDialog.title}
+        message={vi.reinviteDialog.message(email)}
+        confirmLabel={vi.reinviteDialog.confirm}
+        cancelLabel={vi.reinviteDialog.cancel}
         onConfirm={handleReinviteConfirm}
         onCancel={handleReinviteCancel}
       />

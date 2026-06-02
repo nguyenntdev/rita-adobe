@@ -9,6 +9,7 @@ import {
 import userEvent from '@testing-library/user-event';
 
 import { NotificationProvider } from '../../context/NotificationContext';
+import { ThemeProvider } from '../../context/ThemeContext';
 import type {
   AccountService,
   ConnectionStatus,
@@ -90,9 +91,11 @@ function makeMonitorService(): {
 
 function renderDashboard(props: Parameters<typeof DashboardPage>[0] = {}) {
   return render(
-    <NotificationProvider>
-      <DashboardPage {...props} />
-    </NotificationProvider>,
+    <ThemeProvider>
+      <NotificationProvider>
+        <DashboardPage {...props} />
+      </NotificationProvider>
+    </ThemeProvider>,
   );
 }
 
@@ -102,7 +105,7 @@ async function enterValidEmail(user: ReturnType<typeof userEvent.setup>) {
   await user.type(input, VALID_EMAIL);
   await waitFor(() =>
     expect(
-      (screen.getByRole('button', { name: 'Check Status' }) as HTMLButtonElement)
+      (screen.getByRole('button', { name: 'Kiểm tra trạng thái' }) as HTMLButtonElement)
         .disabled,
     ).toBe(false),
   );
@@ -115,23 +118,23 @@ describe('DashboardPage - structure and gating (Req 12.1, 12.2)', () => {
     renderDashboard();
 
     for (const label of [
-      'Check Status',
-      'View 12h Data',
-      'Get Variables',
-      'Reinvite',
-      'Read OTP',
-      'Start Monitoring',
+      'Kiểm tra trạng thái',
+      'Dữ liệu 12 giờ',
+      'Lấy biến dữ liệu',
+      'Mời lại',
+      'Đọc mã OTP',
+      'Bắt đầu theo dõi',
     ]) {
       expect(screen.getByRole('button', { name: label })).not.toBeNull();
     }
 
     for (const title of [
-      'Account Status',
-      '12-Hour Data',
-      'Variables',
-      'Reinvite Status',
-      'OTP',
-      'Monitoring',
+      'Trạng thái tài khoản',
+      'Dữ liệu 12 giờ',
+      'Biến dữ liệu',
+      'Trạng thái mời lại',
+      'Mã OTP',
+      'Theo dõi thời gian thực',
     ]) {
       expect(screen.getByRole('heading', { name: title })).not.toBeNull();
     }
@@ -142,7 +145,7 @@ describe('DashboardPage - structure and gating (Req 12.1, 12.2)', () => {
     renderDashboard();
 
     const checkButton = screen.getByRole('button', {
-      name: 'Check Status',
+      name: 'Kiểm tra trạng thái',
     }) as HTMLButtonElement;
     expect(checkButton.disabled).toBe(true);
 
@@ -162,9 +165,9 @@ describe('DashboardPage - result routing (Req 12.3, 12.4)', () => {
     renderDashboard({ accountService });
 
     await enterValidEmail(user);
-    await user.click(screen.getByRole('button', { name: 'Check Status' }));
+    await user.click(screen.getByRole('button', { name: 'Kiểm tra trạng thái' }));
 
-    const panel = screen.getByRole('region', { name: 'Account Status' });
+    const panel = screen.getByRole('region', { name: 'Trạng thái tài khoản' });
     await waitFor(() =>
       expect(within(panel).getByText('status')).not.toBeNull(),
     );
@@ -182,9 +185,9 @@ describe('DashboardPage - result routing (Req 12.3, 12.4)', () => {
     renderDashboard({ accountService });
 
     await enterValidEmail(user);
-    await user.click(screen.getByRole('button', { name: 'Check Status' }));
+    await user.click(screen.getByRole('button', { name: 'Kiểm tra trạng thái' }));
 
-    const panel = screen.getByRole('region', { name: 'Account Status' });
+    const panel = screen.getByRole('region', { name: 'Trạng thái tài khoản' });
     await waitFor(() =>
       expect(within(panel).getByRole('alert').textContent).toBe(
         'Account not found',
@@ -200,7 +203,7 @@ describe('DashboardPage - result routing (Req 12.3, 12.4)', () => {
     renderDashboard({ otpService });
 
     await enterValidEmail(user);
-    await user.click(screen.getByRole('button', { name: 'Read OTP' }));
+    await user.click(screen.getByRole('button', { name: 'Đọc mã OTP' }));
 
     const otp = await screen.findByTestId('otp-value');
     expect(otp.textContent).toBe('987654');
@@ -214,9 +217,9 @@ describe('DashboardPage - result routing (Req 12.3, 12.4)', () => {
     renderDashboard({ accountService });
 
     await enterValidEmail(user);
-    await user.click(screen.getByRole('button', { name: 'View 12h Data' }));
+    await user.click(screen.getByRole('button', { name: 'Dữ liệu 12 giờ' }));
 
-    const panel = screen.getByRole('region', { name: '12-Hour Data' });
+    const panel = screen.getByRole('region', { name: 'Dữ liệu 12 giờ' });
     await waitFor(() =>
       expect(within(panel).getByTestId('data-table-empty')).not.toBeNull(),
     );
@@ -235,8 +238,8 @@ describe('DashboardPage - result replacement (Req 12.5)', () => {
 
     await enterValidEmail(user);
 
-    const button = screen.getByRole('button', { name: 'Check Status' });
-    const panel = screen.getByRole('region', { name: 'Account Status' });
+    const button = screen.getByRole('button', { name: 'Kiểm tra trạng thái' });
+    const panel = screen.getByRole('region', { name: 'Trạng thái tài khoản' });
 
     await user.click(button);
     await waitFor(() => expect(within(panel).getByText('first')).not.toBeNull());
@@ -261,9 +264,9 @@ describe('DashboardPage - email persistence (Req 12.6)', () => {
     await enterValidEmail(user);
     const input = screen.getByLabelText('Email address') as HTMLInputElement;
 
-    await user.click(screen.getByRole('button', { name: 'Check Status' }));
-    await user.click(screen.getByRole('button', { name: 'Get Variables' }));
-    await user.click(screen.getByRole('button', { name: 'Read OTP' }));
+    await user.click(screen.getByRole('button', { name: 'Kiểm tra trạng thái' }));
+    await user.click(screen.getByRole('button', { name: 'Lấy biến dữ liệu' }));
+    await user.click(screen.getByRole('button', { name: 'Đọc mã OTP' }));
 
     expect(input.value).toBe(VALID_EMAIL);
   });
@@ -279,16 +282,16 @@ describe('DashboardPage - reinvite confirmation flow (Req 5.2, 5.7)', () => {
     renderDashboard({ accountService });
 
     await enterValidEmail(user);
-    await user.click(screen.getByRole('button', { name: 'Reinvite' }));
+    await user.click(screen.getByRole('button', { name: 'Mời lại' }));
 
     const dialog = screen.getByRole('dialog');
     expect(dialog.textContent).toContain(VALID_EMAIL);
     expect(reinvite).not.toHaveBeenCalled();
 
-    await user.click(screen.getByRole('button', { name: 'Send Reinvite' }));
+    await user.click(screen.getByRole('button', { name: 'Gửi lời mời' }));
     await waitFor(() => expect(reinvite).toHaveBeenCalledWith(VALID_EMAIL));
 
-    const panel = screen.getByRole('region', { name: 'Reinvite Status' });
+    const panel = screen.getByRole('region', { name: 'Trạng thái mời lại' });
     await waitFor(() =>
       expect(within(panel).getByText('Reinvite sent')).not.toBeNull(),
     );
@@ -301,8 +304,8 @@ describe('DashboardPage - reinvite confirmation flow (Req 5.2, 5.7)', () => {
     renderDashboard({ accountService });
 
     await enterValidEmail(user);
-    await user.click(screen.getByRole('button', { name: 'Reinvite' }));
-    await user.click(screen.getByRole('button', { name: 'Cancel' }));
+    await user.click(screen.getByRole('button', { name: 'Mời lại' }));
+    await user.click(screen.getByRole('button', { name: 'Hủy' }));
 
     expect(screen.queryByRole('dialog')).toBeNull();
     expect(reinvite).not.toHaveBeenCalled();
@@ -316,13 +319,13 @@ describe('DashboardPage - monitoring panel (Req 12.1)', () => {
     renderDashboard({ createMonitor: () => monitor.service });
 
     await enterValidEmail(user);
-    await user.click(screen.getByRole('button', { name: 'Start Monitoring' }));
+    await user.click(screen.getByRole('button', { name: 'Bắt đầu theo dõi' }));
     expect(monitor.connect).toHaveBeenCalledWith(VALID_EMAIL);
 
     monitor.emitStatus('connected');
     monitor.emitMessage({ timestamp: '2026-02-01T10:00:00', content: 'hello' });
 
-    const panel = screen.getByRole('region', { name: 'Monitoring' });
+    const panel = screen.getByRole('region', { name: 'Theo dõi thời gian thực' });
     await waitFor(() =>
       expect(within(panel).getByText('hello')).not.toBeNull(),
     );
@@ -334,10 +337,10 @@ describe('DashboardPage - monitoring panel (Req 12.1)', () => {
     renderDashboard({ createMonitor: () => monitor.service });
 
     await enterValidEmail(user);
-    await user.click(screen.getByRole('button', { name: 'Start Monitoring' }));
+    await user.click(screen.getByRole('button', { name: 'Bắt đầu theo dõi' }));
     monitor.emitStatus('connected');
 
-    await user.click(screen.getByRole('button', { name: 'Disconnect' }));
+    await user.click(screen.getByRole('button', { name: 'Ngắt kết nối' }));
     expect(monitor.disconnect).toHaveBeenCalled();
   });
 });

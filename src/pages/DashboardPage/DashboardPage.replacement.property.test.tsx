@@ -9,6 +9,7 @@ import {
 import fc from 'fast-check';
 
 import { NotificationProvider } from '../../context/NotificationContext';
+import { ThemeProvider } from '../../context/ThemeContext';
 import { EMAIL_VALIDATION_DEBOUNCE_MS } from '../../components/EmailInput/EmailInput';
 import type { AccountService, OTPService, WebSocketService, WSMessage, ConnectionStatus } from '../../types';
 import { DashboardPage } from './DashboardPage';
@@ -92,13 +93,15 @@ describe('DashboardPage — Property 13: Dashboard panel result replacement', ()
           };
 
           render(
-            <NotificationProvider>
-              <DashboardPage
-                accountService={accountService}
-                otpService={makeOtpService()}
-                createMonitor={makeMonitorService}
-              />
-            </NotificationProvider>,
+            <ThemeProvider>
+              <NotificationProvider>
+                <DashboardPage
+                  accountService={accountService}
+                  otpService={makeOtpService()}
+                  createMonitor={makeMonitorService}
+                />
+              </NotificationProvider>
+            </ThemeProvider>,
           );
 
           const input = screen.getByLabelText('Email address') as HTMLInputElement;
@@ -108,8 +111,8 @@ describe('DashboardPage — Property 13: Dashboard panel result replacement', ()
             jest.advanceTimersByTime(EMAIL_VALIDATION_DEBOUNCE_MS);
           });
 
-          const button = screen.getByRole('button', { name: 'Check Status' });
-          const panel = screen.getByRole('region', { name: 'Account Status' });
+          const button = screen.getByRole('button', { name: 'Kiểm tra trạng thái' });
+          const panel = screen.getByRole('region', { name: 'Trạng thái tài khoản' });
 
           // Run every result through the same panel in order. Each click awaits
           // the resolved checkAccount promise so the panel reflects that result.

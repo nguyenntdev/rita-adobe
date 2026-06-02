@@ -66,7 +66,7 @@ export function ToastNotification({
       <button
         type="button"
         className="toast__close"
-        aria-label="Dismiss notification"
+        aria-label="Đóng thông báo"
         onClick={() => onDismiss(id)}
       >
         &times;

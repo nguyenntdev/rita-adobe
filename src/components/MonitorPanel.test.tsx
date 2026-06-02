@@ -82,7 +82,7 @@ describe('MonitorPanel - status indicator (Req 7.3, 7.6)', () => {
     const indicator = screen.getByTestId('monitor-status');
     expect(indicator.getAttribute('data-status')).toBe('connected');
     expect(indicator.getAttribute('data-connected')).toBe('true');
-    expect(indicator.textContent).toMatch(/connected/i);
+    expect(indicator.textContent).toMatch(/đã kết nối/i);
   });
 
   it('shows a disconnected indicator when the connection is closed', () => {
@@ -93,7 +93,7 @@ describe('MonitorPanel - status indicator (Req 7.3, 7.6)', () => {
     const indicator = screen.getByTestId('monitor-status');
     expect(indicator.getAttribute('data-status')).toBe('disconnected');
     expect(indicator.getAttribute('data-connected')).toBe('false');
-    expect(indicator.textContent).toMatch(/disconnected/i);
+    expect(indicator.textContent).toMatch(/đã ngắt kết nối/i);
   });
 
   it('reflects connecting and error states distinctly', () => {
@@ -107,7 +107,7 @@ describe('MonitorPanel - status indicator (Req 7.3, 7.6)', () => {
     rerender(<MonitorPanel messages={[]} maxMessages={500} status="error" />);
     const indicator = screen.getByTestId('monitor-status');
     expect(indicator.getAttribute('data-status')).toBe('error');
-    expect(indicator.textContent).toMatch(/error/i);
+    expect(indicator.textContent).toMatch(/lỗi/i);
   });
 });
 
@@ -124,7 +124,7 @@ describe('MonitorPanel - cap visualization (Req 7.1, 7.5)', () => {
     const capacity = screen.getByTestId('monitor-capacity');
     expect(capacity.getAttribute('data-count')).toBe('3');
     expect(capacity.getAttribute('data-max')).toBe('500');
-    expect(capacity.textContent).toBe('3 / 500 messages');
+    expect(capacity.textContent).toBe('3 / 500 tin nhắn');
   });
 
   it('caps the progress bar at the maximum when the queue is full', () => {

@@ -1,0 +1,189 @@
+/* Fluent 2 unified dashboard layout. */
+
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: var(--bg-canvas);
+}
+
+/* Top app bar: brand on the left, theme toggle on the right. */
+.app-bar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 56px;
+  padding: 0 var(--sp-xl);
+  background-color: var(--bg-layer);
+  border-bottom: 1px solid var(--stroke);
+  box-shadow: var(--shadow-2);
+}
+
+.app-bar__brand {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-m);
+}
+
+.app-bar__logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-m);
+  background: linear-gradient(135deg, var(--brand-60), var(--brand-70));
+  color: #ffffff;
+  font-weight: 700;
+  font-size: var(--fs-400);
+}
+
+.app-bar__title {
+  font-size: var(--fs-500);
+  font-weight: 600;
+  line-height: 1.1;
+}
+
+.app-bar__tagline {
+  font-size: var(--fs-100);
+  color: var(--fg-muted);
+}
+
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--stroke-strong);
+  border-radius: var(--radius-m);
+  background-color: var(--bg-layer);
+  color: var(--fg-default);
+  font-size: var(--fs-500);
+  cursor: pointer;
+  transition: background-color 0.1s ease;
+}
+
+.theme-toggle:hover {
+  background-color: var(--bg-hover);
+}
+
+/* Main content area. */
+.dashboard {
+  flex: 1 1 auto;
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: var(--sp-xl);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-xl);
+}
+
+/* Search/command card holding the email field + actions. */
+.dashboard__command {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-l);
+  padding: var(--sp-xl);
+  background-color: var(--bg-layer);
+  border: 1px solid var(--stroke);
+  border-radius: var(--radius-l);
+  box-shadow: var(--shadow-4);
+}
+
+.dashboard__command-header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-xs);
+}
+
+.dashboard__command-title {
+  font-size: var(--fs-500);
+  font-weight: 600;
+}
+
+.dashboard__command-hint {
+  font-size: var(--fs-200);
+  color: var(--fg-muted);
+}
+
+.dashboard__email {
+  max-width: 520px;
+}
+
+.dashboard__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-s);
+}
+
+/* Responsive grid of result panels. */
+.dashboard__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: var(--sp-l);
+  align-items: start;
+}
+
+/* OTP value presentation. */
+.otp-result {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-m);
+  padding: var(--sp-l);
+  flex-wrap: wrap;
+}
+
+.otp-result__value {
+  font-family: var(--font-mono);
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--fg-default);
+  background-color: var(--bg-subtle);
+  padding: var(--sp-s) var(--sp-m);
+  border-radius: var(--radius-m);
+}
+
+.panel-empty {
+  padding: var(--sp-l);
+  margin: 0;
+  color: var(--fg-muted);
+  font-size: var(--fs-300);
+}
+
+.reinvite-message {
+  padding: var(--sp-l);
+  margin: 0;
+  color: var(--status-success);
+  font-weight: 600;
+}
+
+.monitor-controls {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-m);
+  padding: var(--sp-l);
+}
+
+/* Desktop-only viewport guard. */
+.viewport-guard {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: var(--sp-xxl);
+  text-align: center;
+  background-color: var(--bg-canvas);
+  color: var(--fg-secondary);
+}
+
+.viewport-guard p {
+  max-width: 32rem;
+  font-size: var(--fs-400);
+  line-height: 1.6;
+}

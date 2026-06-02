@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import './ResultPanel.css';
 
 /**
  * Props for {@link ResultPanel}.
@@ -51,7 +52,7 @@ export function ResultPanel({
             aria-live="polite"
           >
             <span className="result-panel__spinner" aria-hidden="true" />
-            <span className="result-panel__loading-label">Loading…</span>
+            <span className="result-panel__loading-label">Đang tải…</span>
           </div>
         ) : hasError ? (
           <div className="result-panel__error" role="alert">

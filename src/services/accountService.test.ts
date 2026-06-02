@@ -25,7 +25,6 @@ jest.mock('../infrastructure/httpClient', () => {
 // Import after the mock factory so we reference the mocked instances.
 import { httpClient, variableClient } from '../infrastructure/httpClient';
 
-const mockHttpGet = httpClient.get as jest.Mock;
 const mockHttpPost = httpClient.post as jest.Mock;
 const mockVariableGet = variableClient.get as jest.Mock;
 
@@ -34,18 +33,18 @@ beforeEach(() => {
 });
 
 describe('checkAccount', () => {
-  it('targets /ades-support/account/check with the email as a query param', async () => {
-    mockHttpGet.mockResolvedValue({ data: { status: 'active' } });
+  it('POSTs to /ades-support/account/check with the email in the body', async () => {
+    mockHttpPost.mockResolvedValue({ data: { status: 'active' } });
 
     await checkAccount('user@example.com');
 
-    expect(mockHttpGet).toHaveBeenCalledWith('/ades-support/account/check', {
-      params: { email: 'user@example.com' },
+    expect(mockHttpPost).toHaveBeenCalledWith('/ades-support/account/check', {
+      email: 'user@example.com',
     });
   });
 
   it('normalizes a populated response into success-with-data', async () => {
-    mockHttpGet.mockResolvedValue({ data: { status: 'active', plan: 'pro' } });
+    mockHttpPost.mockResolvedValue({ data: { status: 'active', plan: 'pro' } });
 
     const result = await checkAccount('user@example.com');
 
@@ -56,7 +55,7 @@ describe('checkAccount', () => {
   });
 
   it('normalizes a non-object body into success-empty (empty record)', async () => {
-    mockHttpGet.mockResolvedValue({ data: null });
+    mockHttpPost.mockResolvedValue({ data: null });
 
     const result = await checkAccount('user@example.com');
 
@@ -64,8 +63,8 @@ describe('checkAccount', () => {
   });
 
   it('surfaces the API failure reason on error', async () => {
-    mockHttpGet.mockRejectedValue(
-      new HttpError('Invalid request.', {
+    mockHttpPost.mockRejectedValue(
+      new HttpError('Yêu cầu không hợp lệ.', {
         status: 400,
         apiMessage: 'account not found',
       }),
@@ -78,19 +77,19 @@ describe('checkAccount', () => {
 });
 
 describe('getAccount12h', () => {
-  it('targets /ades-support/account-12h with the email as a query param', async () => {
-    mockHttpGet.mockResolvedValue({ data: [] });
+  it('POSTs to /ades-support/account-12h with the email in the body', async () => {
+    mockHttpPost.mockResolvedValue({ data: [] });
 
     await getAccount12h('user@example.com');
 
-    expect(mockHttpGet).toHaveBeenCalledWith('/ades-support/account-12h', {
-      params: { email: 'user@example.com' },
+    expect(mockHttpPost).toHaveBeenCalledWith('/ades-support/account-12h', {
+      email: 'user@example.com',
     });
   });
 
   it('returns the records array for a populated response', async () => {
     const records = [{ event: 'login' }, { event: 'logout' }];
-    mockHttpGet.mockResolvedValue({ data: records });
+    mockHttpPost.mockResolvedValue({ data: records });
 
     const result = await getAccount12h('user@example.com');
 
@@ -99,7 +98,7 @@ describe('getAccount12h', () => {
 
   it('unwraps a { records: [...] } envelope', async () => {
     const records = [{ event: 'login' }];
-    mockHttpGet.mockResolvedValue({ data: { records } });
+    mockHttpPost.mockResolvedValue({ data: { records } });
 
     const result = await getAccount12h('user@example.com');
 
@@ -107,7 +106,7 @@ describe('getAccount12h', () => {
   });
 
   it('returns an empty array for the no-activity (success-empty) state', async () => {
-    mockHttpGet.mockResolvedValue({ data: {} });
+    mockHttpPost.mockResolvedValue({ data: {} });
 
     const result = await getAccount12h('user@example.com');
 
@@ -115,8 +114,8 @@ describe('getAccount12h', () => {
   });
 
   it('surfaces the API failure reason on error', async () => {
-    mockHttpGet.mockRejectedValue(
-      new HttpError('Server error. Please try again later.', {
+    mockHttpPost.mockRejectedValue(
+      new HttpError('Lỗi máy chủ. Vui lòng thử lại sau.', {
         status: 500,
         apiMessage: 'upstream timeout',
       }),
@@ -135,7 +134,7 @@ describe('getVariables', () => {
     await getVariables('user+tag@example.com');
 
     // The external variable client is used (not the authenticated httpClient).
-    expect(mockHttpGet).not.toHaveBeenCalled();
+    expect(mockHttpPost).not.toHaveBeenCalled();
     expect(mockVariableGet).toHaveBeenCalledWith('/user%2Btag%40example.com');
   });
 
@@ -198,7 +197,7 @@ describe('reinvite', () => {
 
     expect(result).toEqual({
       success: true,
-      message: 'Reinvite sent to user@example.com.',
+      message: 'Đã gửi lời mời lại tới user@example.com.',
     });
   });
 

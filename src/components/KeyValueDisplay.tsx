@@ -54,29 +54,29 @@ export interface KeyValueDisplayProps {
 const listStyle: CSSProperties = {
   display: 'grid',
   gridTemplateColumns: 'minmax(120px, max-content) 1fr',
-  gap: '4px 16px',
+  gap: '8px 16px',
   margin: 0,
-  padding: '12px',
+  padding: 'var(--sp-l, 16px)',
 };
 
 const keyStyle: CSSProperties = {
   fontWeight: 600,
-  color: '#1e293b',
+  color: 'var(--fg-default)',
   wordBreak: 'break-word',
 };
 
 const valueStyle: CSSProperties = {
   margin: 0,
-  color: '#334155',
+  color: 'var(--fg-secondary)',
   whiteSpace: 'pre-wrap',
   wordBreak: 'break-word',
-  fontFamily: 'monospace',
+  fontFamily: 'var(--font-mono)',
 };
 
 const emptyStyle: CSSProperties = {
-  padding: '12px',
+  padding: 'var(--sp-l, 16px)',
   margin: 0,
-  color: '#57606a',
+  color: 'var(--fg-muted)',
 };
 
 /**

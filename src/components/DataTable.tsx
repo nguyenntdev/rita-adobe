@@ -51,27 +51,28 @@ const tableStyle: CSSProperties = {
 };
 
 const cellStyle: CSSProperties = {
-  border: '1px solid #d0d7de',
-  padding: '6px 10px',
+  border: '1px solid var(--stroke)',
+  padding: '8px 12px',
   textAlign: 'left',
   verticalAlign: 'top',
   whiteSpace: 'pre-wrap',
   wordBreak: 'break-word',
-  fontFamily: 'monospace',
+  fontFamily: 'var(--font-mono)',
+  color: 'var(--fg-secondary)',
 };
 
 const headerCellStyle: CSSProperties = {
   ...cellStyle,
-  backgroundColor: '#f6f8fa',
+  backgroundColor: 'var(--bg-layer-alt)',
   fontWeight: 600,
-  fontFamily: 'inherit',
-  color: '#1e293b',
+  fontFamily: 'var(--font-base)',
+  color: 'var(--fg-default)',
 };
 
 const emptyStyle: CSSProperties = {
-  padding: '12px',
+  padding: 'var(--sp-l, 16px)',
   margin: 0,
-  color: '#57606a',
+  color: 'var(--fg-muted)',
 };
 
 /**

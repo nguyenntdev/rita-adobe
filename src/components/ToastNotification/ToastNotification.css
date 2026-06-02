@@ -1,16 +1,15 @@
-/* Fixed, consistent on-screen position for all toasts (Requirement 10.8). */
+/* Fixed, consistent on-screen position for all toasts. */
 .toast-container {
   position: fixed;
-  top: 1rem;
-  right: 1rem;
+  top: var(--sp-l);
+  right: var(--sp-l);
   z-index: 1000;
   display: flex;
   flex-direction: column;
-  /* Newest-on-top: notifications arrive most-recent-first, so default
-     column order already places the newest at the top of the stack. */
-  gap: 0.5rem;
+  /* Newest-on-top: notifications arrive most-recent-first. */
+  gap: var(--sp-s);
   width: 360px;
-  max-width: calc(100vw - 2rem);
+  max-width: calc(100vw - 2 * var(--sp-l));
   pointer-events: none;
 }
 
@@ -18,34 +17,46 @@
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 0.75rem;
-  padding: 0.75rem 1rem;
-  border-radius: 6px;
+  gap: var(--sp-m);
+  padding: var(--sp-m) var(--sp-l);
+  border-radius: var(--radius-m);
   border-left: 4px solid transparent;
-  background: #ffffff;
-  color: #1a1a1a;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  background: var(--bg-layer);
+  color: var(--fg-default);
+  box-shadow: var(--shadow-16);
   pointer-events: auto;
+  animation: toast-in 0.18s ease;
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateX(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 .toast--success {
-  border-left-color: #2e7d32;
-  background: #edf7ed;
+  border-left-color: var(--status-success);
+  background: var(--status-success-bg);
 }
 
 .toast--error {
-  border-left-color: #c62828;
-  background: #fdecea;
+  border-left-color: var(--status-danger);
+  background: var(--status-danger-bg);
 }
 
 .toast--info {
-  border-left-color: #1565c0;
-  background: #e8f0fe;
+  border-left-color: var(--status-info);
+  background: var(--status-info-bg);
 }
 
 .toast__message {
   flex: 1;
-  font-size: 0.95rem;
+  font-size: var(--fs-300);
   line-height: 1.4;
   word-break: break-word;
 }
@@ -58,7 +69,8 @@
   font-size: 1.25rem;
   line-height: 1;
   cursor: pointer;
-  padding: 0 0.25rem;
+  padding: 0 var(--sp-xs);
+  border-radius: var(--radius-s);
 }
 
 .toast__close:hover {

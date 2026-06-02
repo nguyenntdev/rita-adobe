@@ -3,6 +3,7 @@ import {
   validateEmail,
   EMAIL_MAX_LENGTH,
 } from '../../utils/emailValidation';
+import './EmailInput.css';
 
 /**
  * Reusable validated email input (design "EmailInput", task 10.1).

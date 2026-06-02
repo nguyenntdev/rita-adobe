@@ -26,10 +26,10 @@ const STATUS_META: Record<
   ConnectionStatus,
   { label: string; color: string }
 > = {
-  connected: { label: 'Connected', color: '#1a7f37' },
-  connecting: { label: 'Connecting…', color: '#9a6700' },
-  disconnected: { label: 'Disconnected', color: '#57606a' },
-  error: { label: 'Connection error', color: '#cf222e' },
+  connected: { label: 'Đã kết nối', color: 'var(--status-success)' },
+  connecting: { label: 'Đang kết nối…', color: 'var(--status-warning)' },
+  disconnected: { label: 'Đã ngắt kết nối', color: 'var(--fg-muted)' },
+  error: { label: 'Lỗi kết nối', color: 'var(--status-danger)' },
 };
 
 /**
@@ -51,8 +51,9 @@ function formatContent(content: unknown): string {
 const panelStyle: CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
-  border: '1px solid #d0d7de',
-  borderRadius: 6,
+  border: '1px solid var(--stroke)',
+  borderRadius: 'var(--radius-m)',
+  background: 'var(--bg-layer)',
 };
 
 const headerStyle: CSSProperties = {
@@ -60,8 +61,9 @@ const headerStyle: CSSProperties = {
   alignItems: 'center',
   justifyContent: 'space-between',
   padding: '8px 12px',
-  borderBottom: '1px solid #d0d7de',
+  borderBottom: '1px solid var(--stroke)',
   gap: 12,
+  color: 'var(--fg-secondary)',
 };
 
 const statusStyle: CSSProperties = {
@@ -83,13 +85,13 @@ const messageRowStyle: CSSProperties = {
   display: 'flex',
   gap: 12,
   padding: '6px 12px',
-  borderBottom: '1px solid #eaeef2',
-  fontFamily: 'monospace',
+  borderBottom: '1px solid var(--stroke)',
+  fontFamily: 'var(--font-mono)',
   fontSize: 13,
 };
 
 const timestampStyle: CSSProperties = {
-  color: '#57606a',
+  color: 'var(--fg-muted)',
   whiteSpace: 'nowrap',
 };
 
@@ -119,7 +121,7 @@ export function MonitorPanel({
   }, [messages.length, maxMessages]);
 
   return (
-    <section style={panelStyle} aria-label="Real-time monitor">
+    <section style={panelStyle} aria-label="Nhật ký theo dõi">
       <header style={headerStyle}>
         <span
           style={{ ...statusStyle, color: statusMeta.color }}
@@ -146,9 +148,9 @@ export function MonitorPanel({
           data-testid="monitor-capacity"
           data-count={messages.length}
           data-max={maxMessages}
-          aria-label={`${messages.length} of ${maxMessages} messages`}
+          aria-label={`${messages.length} trên ${maxMessages} tin nhắn`}
         >
-          {messages.length} / {maxMessages} messages
+          {messages.length} / {maxMessages} tin nhắn
         </span>
       </header>
 
@@ -159,13 +161,14 @@ export function MonitorPanel({
         aria-valuemax={maxMessages}
         aria-valuenow={Math.min(messages.length, maxMessages)}
         data-testid="monitor-capacity-bar"
-        style={{ height: 4, backgroundColor: '#eaeef2' }}
+        style={{ height: 4, backgroundColor: 'var(--bg-subtle)' }}
       >
         <div
           style={{
             height: '100%',
             width: `${fillRatio * 100}%`,
-            backgroundColor: fillRatio >= 1 ? '#cf222e' : '#0969da',
+            backgroundColor:
+              fillRatio >= 1 ? 'var(--status-danger)' : 'var(--brand-60)',
           }}
         />
       </div>
@@ -173,9 +176,9 @@ export function MonitorPanel({
       {messages.length === 0 ? (
         <p
           data-testid="monitor-empty"
-          style={{ padding: '12px', color: '#57606a', margin: 0 }}
+          style={{ padding: 'var(--sp-l)', color: 'var(--fg-muted)', margin: 0 }}
         >
-          No messages received yet.
+          Chưa có tin nhắn nào.
         </p>
       ) : (
         <ul style={listStyle} data-testid="monitor-message-list">
