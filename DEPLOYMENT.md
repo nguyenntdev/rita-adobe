@@ -15,6 +15,8 @@ When connecting the repository in the Cloudflare dashboard (**Workers & Pages �
 
 `npm run build` runs `tsc -b && vite build`, so a type error will fail the deploy — that's intended.
 
+> **Vite version note:** Cloudflare's Workers build pipeline requires Vite 6+ to auto-configure. This project uses Vite 6, so both the Pages and Workers flows work. If you see `The version of Vite used in the project ("5.x") cannot be automatically configured`, the environment is building against an older checkout — pull the latest commit.
+
 If the build image defaults to an older Node, pin it with an environment variable in the Pages project settings:
 
 ```

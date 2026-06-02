@@ -19,9 +19,12 @@ import { clearToken, storeToken } from './sessionStore';
  */
 
 /**
- * Non-empty token strings drawn from a token-like alphabet (JWT/bearer style
- * characters plus whitespace) but free of CR/LF/control characters, which are
- * not valid in HTTP header values.
+ * Non-empty token strings drawn from a bearer-token-like alphabet (JWT /
+ * `token68` style characters per RFC 6750) plus a couple of multi-byte unicode
+ * characters. Spaces and CR/LF/control characters are intentionally excluded:
+ * they are not valid in `token68` bearer credentials, and axios (>= 1.16) trims
+ * surrounding whitespace from header values, which would not represent a real
+ * token round-trip.
  */
 const tokenArb = fc.stringOf(
   fc.constantFrom(
@@ -33,7 +36,6 @@ const tokenArb = fc.stringOf(
     '/',
     '=',
     ':',
-    ' ',
     '€',
     '𝕏',
   ),

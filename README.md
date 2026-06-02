@@ -18,7 +18,7 @@ Internal web application that provides ADES support staff with a single interfac
 ## Tech Stack
 
 - React 18 + TypeScript
-- Vite (build/dev server)
+- Vite 6 (build/dev server)
 - React Router v6 (client-side routing)
 - Axios (HTTP client)
 - Jest + React Testing Library + fast-check (unit, integration, and property-based tests)
