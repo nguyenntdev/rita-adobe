@@ -118,6 +118,80 @@
   color: var(--fg-secondary);
 }
 
+/* Two big primary action tiles. */
+.action-tiles {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--sp-m);
+}
+
+.action-tile {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-m);
+  padding: var(--sp-l);
+  border-radius: var(--radius-l);
+  border: 1px solid transparent;
+  cursor: pointer;
+  text-align: left;
+  transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.12s ease;
+}
+
+.action-tile:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.action-tile:not(:disabled):hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-8);
+}
+
+.action-tile:not(:disabled):active {
+  transform: translateY(0);
+}
+
+.action-tile--primary {
+  background: var(--brand-gradient);
+  color: #ffffff;
+}
+
+.action-tile--accent {
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-strong) 100%);
+  color: #ffffff;
+}
+
+.action-tile__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.16);
+  font-size: 22px;
+}
+
+.action-tile__text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.action-tile__title {
+  font-size: var(--fs-500);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.action-tile__desc {
+  font-size: var(--fs-200);
+  opacity: 0.85;
+  line-height: 1.4;
+}
+
 .command-card__actions {
   display: flex;
   flex-wrap: wrap;
@@ -126,11 +200,17 @@
 }
 
 .command-card__actions .action-button {
-  height: 42px;
+  height: 40px;
 }
 
 .command-card__spacer {
   flex: 1 1 auto;
+}
+
+@media (max-width: 600px) {
+  .action-tiles {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* Results region. */
@@ -245,7 +325,7 @@
   padding: var(--sp-l);
 }
 
-/* Desktop-only viewport guard. */
+/* Desktop-only viewport guard (legacy; no longer used — app is responsive). */
 .viewport-guard {
   display: flex;
   align-items: center;
@@ -255,4 +335,106 @@
   text-align: center;
   background-color: var(--bg-canvas);
   color: var(--fg-secondary);
+}
+
+/* ---------------------------------------------------------------------------
+   Responsive: tablet and phone.
+   The layout works from ~320px up to large desktops.
+--------------------------------------------------------------------------- */
+
+/* Tablet and below. */
+@media (max-width: 768px) {
+  .app-bar {
+    height: 56px;
+    padding: 0 var(--sp-l);
+  }
+
+  .console {
+    padding: var(--sp-l) var(--sp-l) var(--sp-xxl);
+    gap: var(--sp-l);
+  }
+
+  .command-card {
+    padding: var(--sp-l);
+    border-radius: var(--radius-m);
+  }
+
+  .command-card__field {
+    max-width: none;
+  }
+}
+
+/* Phone. */
+@media (max-width: 560px) {
+  .app-bar {
+    padding: 0 var(--sp-m);
+  }
+
+  .app-bar__wordmark {
+    letter-spacing: 0.14em;
+    font-size: var(--fs-400);
+  }
+
+  .console {
+    padding: var(--sp-m) var(--sp-m) var(--sp-xl);
+  }
+
+  /* Stack the two primary tiles. */
+  .action-tiles {
+    grid-template-columns: 1fr;
+  }
+
+  .action-tile {
+    padding: var(--sp-m);
+  }
+
+  .action-tile__title {
+    font-size: var(--fs-400);
+  }
+
+  /* Secondary actions go full-width and the dropdown spans the row. */
+  .command-card__actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .command-card__actions .action-button,
+  .command-card__actions .menu,
+  .command-card__actions .menu__trigger,
+  .results__clear {
+    width: 100%;
+  }
+
+  .command-card__spacer {
+    display: none;
+  }
+
+  /* The tools menu should open full-width on phones. */
+  .command-card__actions .menu__popover {
+    left: 0;
+    right: 0;
+    min-width: 0;
+  }
+
+  /* OTP value scales down so it never overflows. */
+  .otp-result__value {
+    font-size: 26px;
+    letter-spacing: 0.1em;
+    padding: var(--sp-s) var(--sp-l);
+  }
+
+  .otp-result {
+    padding: var(--sp-m);
+  }
+
+  .results__placeholder {
+    padding: 40px var(--sp-l);
+  }
+}
+
+/* Very small phones. */
+@media (max-width: 380px) {
+  .otp-result__value {
+    font-size: 22px;
+  }
 }

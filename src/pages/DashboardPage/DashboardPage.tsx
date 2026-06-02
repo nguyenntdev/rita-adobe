@@ -264,9 +264,6 @@ export function DashboardPage({
 
       <main className="console" data-testid="dashboard-page">
         <section className="command-card">
-          <h1 className="command-card__title">{vi.panels.accountStatus}</h1>
-          <p className="command-card__subtitle">{vi.empty.noEmail}</p>
-
           <div className="command-card__field">
             <label className="command-card__field-label">{vi.email.label}</label>
             <EmailInput
@@ -277,27 +274,59 @@ export function DashboardPage({
             />
           </div>
 
+          {/* Two primary actions the staff use most. */}
+          <div
+            className="action-tiles"
+            role="group"
+            aria-label="Thao tác chính"
+          >
+            <button
+              type="button"
+              className="action-tile action-tile--primary"
+              disabled={actionsDisabled || reinviteState.status === 'loading'}
+              aria-busy={reinviteState.status === 'loading'}
+              onClick={handleReinviteClick}
+            >
+              <span className="action-tile__icon" aria-hidden="true">
+                ♻️
+              </span>
+              <span className="action-tile__text">
+                <span className="action-tile__title">{vi.actions.reinvite}</span>
+                <span className="action-tile__desc">{vi.tiles.reinviteDesc}</span>
+              </span>
+            </button>
+
+            <button
+              type="button"
+              className="action-tile action-tile--accent"
+              disabled={actionsDisabled || otpState.status === 'loading'}
+              aria-busy={otpState.status === 'loading'}
+              onClick={handleReadOtp}
+            >
+              <span className="action-tile__icon" aria-hidden="true">
+                🔑
+              </span>
+              <span className="action-tile__text">
+                <span className="action-tile__title">{vi.actions.readOtp}</span>
+                <span className="action-tile__desc">{vi.tiles.otpDesc}</span>
+              </span>
+            </button>
+          </div>
+
+          {/* Secondary actions: status check + the tools dropdown. */}
           <div
             className="command-card__actions"
             role="group"
-            aria-label="Thao tác tài khoản"
+            aria-label="Thao tác khác"
           >
-            {/* Primary actions customers need most. */}
             <ActionButton
               label={vi.actions.checkStatus}
               onClick={handleCheckStatus}
               disabled={actionsDisabled}
               loading={accountStatus.status === 'loading'}
-            />
-            <ActionButton
-              label={vi.actions.reinvite}
-              onClick={handleReinviteClick}
-              disabled={actionsDisabled}
-              loading={reinviteState.status === 'loading'}
               variant="secondary"
             />
 
-            {/* Secondary tools grouped to keep the surface clean. */}
             <Menu
               triggerLabel={vi.actions.moreTools}
               disabled={actionsDisabled}
@@ -316,13 +345,6 @@ export function DashboardPage({
                   icon: '🔧',
                   loading: variables.status === 'loading',
                   testId: 'tool-variables',
-                },
-                {
-                  id: 'otp',
-                  label: vi.actions.readOtp,
-                  icon: '🔑',
-                  loading: otpState.status === 'loading',
-                  testId: 'tool-otp',
                 },
                 {
                   id: 'monitor',

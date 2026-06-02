@@ -25,8 +25,8 @@ export const vi = {
     checkStatus: 'Kiểm tra trạng thái',
     view12h: 'Dữ liệu 12 giờ',
     getVariables: 'Lấy biến dữ liệu',
-    reinvite: 'Mời lại tài khoản',
-    readOtp: 'Đọc mã OTP',
+    reinvite: 'Xử lý tài khoản',
+    readOtp: 'Nhận mã OTP',
     startMonitoring: 'Bắt đầu theo dõi',
     disconnect: 'Ngắt kết nối',
     retry: 'Thử lại',
@@ -35,6 +35,12 @@ export const vi = {
     cancel: 'Hủy',
     moreTools: 'Công cụ khác',
     clear: 'Xóa kết quả',
+  },
+  /** Short descriptions shown under the two primary action tiles. */
+  tiles: {
+    reinviteDesc: 'Gửi lại lời mời và xử lý lỗi tài khoản Adobe',
+    otpDesc: 'Lấy mã xác minh OTP mới nhất từ email',
+    checkStatus: 'Kiểm tra trạng thái tài khoản',
   },
   panels: {
     accountStatus: 'Trạng thái tài khoản',

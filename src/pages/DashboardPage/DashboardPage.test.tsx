@@ -120,9 +120,12 @@ describe('DashboardPage - structure and gating', () => {
     renderDashboard();
 
     expect(
+      screen.getByRole('button', { name: /Xử lý tài khoản/ }),
+    ).not.toBeNull();
+    expect(screen.getByRole('button', { name: /Nhận mã OTP/ })).not.toBeNull();
+    expect(
       screen.getByRole('button', { name: 'Kiểm tra trạng thái' }),
     ).not.toBeNull();
-    expect(screen.getByRole('button', { name: 'Mời lại tài khoản' })).not.toBeNull();
     expect(screen.getByRole('button', { name: 'Công cụ khác' })).not.toBeNull();
   });
 
@@ -193,7 +196,7 @@ describe('DashboardPage - result routing (Req 12.3, 12.4)', () => {
     );
   });
 
-  it('renders the OTP value only after the OTP tool is used', async () => {
+  it('renders the OTP value only after the OTP action is used', async () => {
     const user = userEvent.setup();
     const otpService = makeOtpService({
       readOTP: jest.fn().mockResolvedValue({ success: true, otp: '987654' }),
@@ -204,7 +207,7 @@ describe('DashboardPage - result routing (Req 12.3, 12.4)', () => {
     // OTP panel is hidden until invoked on demand.
     expect(screen.queryByTestId('otp-value')).toBeNull();
 
-    await selectTool(user, 'tool-otp');
+    await user.click(screen.getByRole('button', { name: /Nhận mã OTP/ }));
 
     const otp = await screen.findByTestId('otp-value');
     expect(otp.textContent).toBe('987654');
@@ -266,7 +269,7 @@ describe('DashboardPage - email persistence (Req 12.6)', () => {
 
     await user.click(screen.getByRole('button', { name: 'Kiểm tra trạng thái' }));
     await selectTool(user, 'tool-variables');
-    await selectTool(user, 'tool-otp');
+    await user.click(screen.getByRole('button', { name: /Nhận mã OTP/ }));
 
     expect(input.value).toBe(VALID_EMAIL);
   });
@@ -282,7 +285,7 @@ describe('DashboardPage - reinvite confirmation flow (Req 5.2, 5.7)', () => {
     renderDashboard({ accountService });
 
     await enterValidEmail(user);
-    await user.click(screen.getByRole('button', { name: 'Mời lại tài khoản' }));
+    await user.click(screen.getByRole('button', { name: /Xử lý tài khoản/ }));
 
     const dialog = screen.getByRole('dialog');
     expect(dialog.textContent).toContain(VALID_EMAIL);
@@ -304,7 +307,7 @@ describe('DashboardPage - reinvite confirmation flow (Req 5.2, 5.7)', () => {
     renderDashboard({ accountService });
 
     await enterValidEmail(user);
-    await user.click(screen.getByRole('button', { name: 'Mời lại tài khoản' }));
+    await user.click(screen.getByRole('button', { name: /Xử lý tài khoản/ }));
     await user.click(screen.getByRole('button', { name: 'Hủy' }));
 
     expect(screen.queryByRole('dialog')).toBeNull();
