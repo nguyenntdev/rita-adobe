@@ -1,0 +1,68 @@
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  width: 240px;
+  min-height: 100%;
+  padding: 1rem 0.75rem;
+  background-color: #0f172a;
+  color: #e2e8f0;
+  box-sizing: border-box;
+}
+
+.sidebar__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.sidebar__section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.sidebar__section-title {
+  margin: 0;
+  padding: 0 0.75rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+
+.sidebar__link {
+  display: block;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  border-left: 3px solid transparent;
+  color: #cbd5e1;
+  font-size: 0.95rem;
+  font-weight: 500;
+  text-decoration: none;
+  transition: background-color 0.15s ease, color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.sidebar__link:hover {
+  background-color: #1e293b;
+  color: #f8fafc;
+}
+
+/* Active item is differentiated by a distinct background AND a left border
+   (Requirement 9.3). */
+.sidebar__link--active {
+  background-color: #2563eb;
+  border-left-color: #93c5fd;
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.sidebar__link--active:hover {
+  background-color: #1d4ed8;
+  color: #ffffff;
+}

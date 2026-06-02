@@ -1,0 +1,148 @@
+import {
+  act,
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  within,
+} from '@testing-library/react';
+import fc from 'fast-check';
+
+import { NotificationProvider } from '../../context/NotificationContext';
+import { EMAIL_VALIDATION_DEBOUNCE_MS } from '../../components/EmailInput/EmailInput';
+import type { AccountService, OTPService, WebSocketService, WSMessage, ConnectionStatus } from '../../types';
+import { DashboardPage } from './DashboardPage';
+
+/**
+ * Feature: rita-adobe, Property 13: Dashboard panel result replacement
+ *
+ * For any dashboard panel and any non-empty sequence of operation results
+ * routed to that panel, the panel content SHALL equal the most recent result
+ * only, with no remnants of previous results.
+ *
+ * Validates: Requirements 12.5
+ *
+ * Strategy: drive the Account Status panel (backed by `checkAccount`) with a
+ * non-empty sequence of distinct key-value results. After running the whole
+ * sequence, the panel must show exactly the final result's keys/values and none
+ * of the keys/values that were unique to earlier results.
+ */
+
+const VALID_EMAIL = 'user@example.com';
+
+/**
+ * Distinct single key/value records. Built from a small alphabet without
+ * `.filter` so generation is cheap (filtered string arbitraries are slow and
+ * can starve the runner). A `salt` integer keeps keys/values identifiable.
+ */
+const tokenArb = fc
+  .tuple(
+    fc.array(fc.constantFrom(...'abcdefghijklmnopqrstuvwxyz'.split('')), {
+      minLength: 1,
+      maxLength: 5,
+    }),
+    fc.integer({ min: 0, max: 9999 }),
+  )
+  .map(([chars, salt]) => `${chars.join('')}${salt}`);
+
+const recordArb = fc
+  .tuple(tokenArb, tokenArb)
+  .map(([key, value]) => ({ [`k_${key}`]: `v_${value}` }));
+
+function makeMonitorService(): WebSocketService {
+  return {
+    connect: jest.fn(),
+    disconnect: jest.fn(),
+    onMessage: (_cb: (m: WSMessage) => void) => {},
+    onStatusChange: (_cb: (s: ConnectionStatus) => void) => {},
+    getStatus: () => 'disconnected',
+  };
+}
+
+function makeOtpService(): OTPService {
+  return { readOTP: jest.fn().mockResolvedValue({ success: true, otp: '000000' }) };
+}
+
+describe('DashboardPage — Property 13: Dashboard panel result replacement', () => {
+  beforeEach(() => {
+    jest.useFakeTimers();
+  });
+
+  afterEach(() => {
+    cleanup();
+    jest.clearAllTimers();
+    jest.useRealTimers();
+  });
+
+  it('shows only the most recent result in a panel after a sequence of results', async () => {
+    await fc.assert(
+      fc.asyncProperty(
+        fc.array(recordArb, { minLength: 1, maxLength: 6 }),
+        async (results) => {
+          // checkAccount resolves the next result on each successive call.
+          const checkAccount = jest.fn();
+          results.forEach((data) =>
+            checkAccount.mockResolvedValueOnce({ success: true, data }),
+          );
+          const accountService: AccountService = {
+            checkAccount,
+            getAccount12h: jest.fn().mockResolvedValue({ success: true, data: [] }),
+            getVariables: jest.fn().mockResolvedValue({ success: true, data: {} }),
+            reinvite: jest.fn().mockResolvedValue({ success: true, message: 'sent' }),
+          };
+
+          render(
+            <NotificationProvider>
+              <DashboardPage
+                accountService={accountService}
+                otpService={makeOtpService()}
+                createMonitor={makeMonitorService}
+              />
+            </NotificationProvider>,
+          );
+
+          const input = screen.getByLabelText('Email address') as HTMLInputElement;
+          fireEvent.change(input, { target: { value: VALID_EMAIL } });
+          // Flush the EmailInput debounce so the Check Status button enables.
+          act(() => {
+            jest.advanceTimersByTime(EMAIL_VALIDATION_DEBOUNCE_MS);
+          });
+
+          const button = screen.getByRole('button', { name: 'Check Status' });
+          const panel = screen.getByRole('region', { name: 'Account Status' });
+
+          // Run every result through the same panel in order. Each click awaits
+          // the resolved checkAccount promise so the panel reflects that result.
+          for (let i = 0; i < results.length; i += 1) {
+            // eslint-disable-next-line no-await-in-loop
+            await act(async () => {
+              fireEvent.click(button);
+            });
+          }
+
+          // After the full sequence, only the final result remains. Earlier
+          // results whose key/value do not also appear in the final result must
+          // be absent (Property 13 / Req 12.5).
+          const finalData = results[results.length - 1];
+          const [finalKey, finalValue] = Object.entries(finalData)[0];
+
+          expect(within(panel).queryByText(finalKey)).not.toBeNull();
+          expect(within(panel).queryByText(finalValue)).not.toBeNull();
+
+          for (let i = 0; i < results.length - 1; i += 1) {
+            const [key, value] = Object.entries(results[i])[0];
+            if (key !== finalKey) {
+              expect(within(panel).queryByText(key)).toBeNull();
+            }
+            if (value !== finalValue) {
+              expect(within(panel).queryByText(value)).toBeNull();
+            }
+          }
+
+          cleanup();
+        },
+      ),
+      { numRuns: 100 },
+    );
+  }, 60000);
+});

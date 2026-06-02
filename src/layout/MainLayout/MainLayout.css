@@ -1,0 +1,50 @@
+/* Application shell layout.
+ *
+ * The shell fills the viewport: a fixed-height header on top, with the sidebar
+ * and scrollable content area filling the remaining height side-by-side. At
+ * >= 1024px the layout fits without horizontal scrolling (Requirement 9.5). */
+.main-layout {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.main-layout__body {
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.main-layout__content {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 1.5rem;
+  overflow: auto;
+  background-color: #f8fafc;
+  box-sizing: border-box;
+}
+
+/* Desktop-only advisory shown below 1024px (Requirement 9.6). Centered,
+   full-viewport message that replaces the shell entirely. */
+.main-layout__viewport-guard {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 100vh;
+  padding: 2rem;
+  background-color: #0f172a;
+  color: #f8fafc;
+  box-sizing: border-box;
+}
+
+.main-layout__viewport-guard-text {
+  max-width: 32rem;
+  margin: 0;
+  font-size: 1.1rem;
+  line-height: 1.6;
+  text-align: center;
+}

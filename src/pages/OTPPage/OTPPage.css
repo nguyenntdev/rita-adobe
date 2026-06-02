@@ -1,0 +1,45 @@
+.otp-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.5rem;
+}
+
+.otp-page__heading {
+  margin: 0;
+  font-size: 1.5rem;
+  color: #0f172a;
+}
+
+.otp-page__controls {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.otp-page__result {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0;
+}
+
+/*
+ * OTP value presentation (Requirement 6.3): minimum 18px font with high
+ * contrast against the background. The size/colour are also applied inline in
+ * the component so the guarantee holds even when this stylesheet is not loaded.
+ */
+.otp-page__value {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  font-family: monospace;
+  color: #0b1f33;
+  background: #ffffff;
+}
+
+.otp-page__empty,
+.otp-page__placeholder {
+  margin: 0;
+  color: #475569;
+}
