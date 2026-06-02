@@ -144,6 +144,16 @@ export const vi = {
     copy: 'Sao chép',
     copied: 'Đã sao chép',
   },
+  profile: {
+    team: 'Nhóm (Team)',
+    product: 'Sản phẩm',
+    group: 'Nhóm tài khoản',
+    updatedAt: 'Cập nhật lúc',
+    note: 'Hướng dẫn xử lý',
+    accessUrl: 'Liên kết truy cập',
+    copyEmail: 'Sao chép email',
+    openAccess: 'Mở trang truy cập',
+  },
   viewport: {
     desktopOnly:
       'RITA Adobe được tối ưu cho màn hình máy tính từ 1024 pixel trở lên. Vui lòng mở rộng cửa sổ hoặc dùng màn hình lớn hơn.',

@@ -150,9 +150,10 @@ describe('DashboardPage - result routing (Req 12.3, 12.4)', () => {
   it('routes a successful account status result into its panel (readable Vietnamese)', async () => {
     const user = userEvent.setup();
     const accountService = makeAccountService({
-      checkAccount: jest
-        .fn()
-        .mockResolvedValue({ success: true, data: { status: 'active' } }),
+      checkAccount: jest.fn().mockResolvedValue({
+        success: true,
+        data: { email: VALID_EMAIL, status: 'active' },
+      }),
     });
     renderDashboard({ accountService });
 
@@ -160,12 +161,15 @@ describe('DashboardPage - result routing (Req 12.3, 12.4)', () => {
     await user.click(screen.getByRole('button', { name: 'Kiểm tra trạng thái' }));
 
     const panel = screen.getByRole('region', { name: 'Trạng thái tài khoản' });
-    // The raw key "status" is shown as the Vietnamese label "Trạng thái",
-    // and the value "active" as the badge "Đang hoạt động".
+    // The account profile card renders the status as a Vietnamese badge.
     await waitFor(() =>
-      expect(within(panel).getByText('Trạng thái')).not.toBeNull(),
+      expect(within(panel).getByTestId('account-status-badge').textContent).toBe(
+        'Đang hoạt động',
+      ),
     );
-    expect(within(panel).getByText('Đang hoạt động')).not.toBeNull();
+    expect(within(panel).getByTestId('account-email').textContent).toBe(
+      VALID_EMAIL,
+    );
     expect(accountService.checkAccount).toHaveBeenCalledWith(VALID_EMAIL);
   });
 

@@ -1,0 +1,194 @@
+.acct-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-l);
+  padding: var(--sp-l);
+}
+
+/* Header: avatar + identity. */
+.acct-card__head {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-l);
+}
+
+.acct-card__avatar {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: var(--brand-gradient);
+  color: #ffffff;
+  font-size: var(--fs-600);
+  font-weight: 700;
+}
+
+.acct-card__identity {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-xs);
+  min-width: 0;
+}
+
+.acct-card__email-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-s);
+}
+
+.acct-card__email {
+  font-size: var(--fs-500);
+  font-weight: 600;
+  color: var(--fg-default);
+  word-break: break-all;
+}
+
+.acct-card__icon-btn {
+  flex: 0 0 auto;
+  width: 26px;
+  height: 26px;
+  border: 1px solid var(--stroke-strong);
+  border-radius: var(--radius-s);
+  background: var(--bg-layer);
+  color: var(--fg-muted);
+  cursor: pointer;
+  font-size: var(--fs-300);
+  line-height: 1;
+}
+
+.acct-card__icon-btn:hover {
+  background: var(--bg-hover);
+  color: var(--brand-60);
+}
+
+/* Status pill. */
+.acct-card__status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  align-self: flex-start;
+  padding: 4px 14px;
+  border-radius: var(--radius-circular);
+  font-size: var(--fs-200);
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.acct-card__status::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.acct-card__status--success {
+  background: var(--status-success-bg);
+  color: var(--status-success);
+}
+
+.acct-card__status--warning {
+  background: var(--status-warning-bg);
+  color: var(--status-warning);
+}
+
+.acct-card__status--danger {
+  background: var(--status-danger-bg);
+  color: var(--status-danger);
+}
+
+.acct-card__status--neutral {
+  background: var(--bg-subtle);
+  color: var(--fg-secondary);
+}
+
+/* Facts grid. */
+.acct-card__facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--sp-m) var(--sp-l);
+  margin: 0;
+  padding: var(--sp-l);
+  background: var(--bg-layer-alt);
+  border: 1px solid var(--stroke);
+  border-radius: var(--radius-m);
+}
+
+.acct-card__fact {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.acct-card__fact dt {
+  font-size: var(--fs-100);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--fg-muted);
+}
+
+.acct-card__fact dd {
+  margin: 0;
+  font-size: var(--fs-300);
+  font-weight: 500;
+  color: var(--fg-default);
+  word-break: break-word;
+}
+
+/* Access link as a button. */
+.acct-card__access {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  gap: var(--sp-xs);
+  padding: 0 var(--sp-l);
+  height: 36px;
+  border-radius: var(--radius-m);
+  background: var(--brand-tint);
+  color: var(--brand-60);
+  font-size: var(--fs-300);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.acct-card__access:hover {
+  background: var(--bg-pressed);
+}
+
+/* Handling note (Vietnamese). */
+.acct-card__note {
+  border: 1px solid var(--stroke);
+  border-left: 3px solid var(--brand-60);
+  border-radius: var(--radius-m);
+  background: var(--bg-layer-alt);
+  padding: var(--sp-m) var(--sp-l);
+}
+
+.acct-card__note-label {
+  font-size: var(--fs-100);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--brand-60);
+  margin-bottom: var(--sp-xs);
+}
+
+.acct-card__note-body {
+  margin: 0;
+  font-size: var(--fs-300);
+  line-height: 1.7;
+  color: var(--fg-secondary);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+@media (max-width: 560px) {
+  .acct-card__facts {
+    grid-template-columns: 1fr;
+  }
+}

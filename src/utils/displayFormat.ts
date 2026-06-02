@@ -140,14 +140,70 @@ export type StatusTone = 'success' | 'warning' | 'danger' | 'neutral';
 
 export function statusTone(raw: string): StatusTone {
   const s = raw.trim().toLowerCase();
-  if (['active', 'completed'].includes(s)) {
+  if (['active', 'completed', 'success', 'renewed'].includes(s)) {
     return 'success';
   }
-  if (['processing', 'pending'].includes(s)) {
+  if (['processing', 'pending', 'renewing'].includes(s)) {
     return 'warning';
   }
   if (['expired', 'cancelled', 'canceled', 'failed', 'suspended', 'inactive'].includes(s)) {
     return 'danger';
   }
   return 'neutral';
+}
+
+/**
+ * Normalized view model for the account/check response, tailored to what staff
+ * actually need: status, product/team, the (Vietnamese) note, and links. The
+ * noisy `parentMultiNote` (the same note duplicated in 4 languages) and other
+ * internal/empty fields are intentionally dropped.
+ */
+export interface AccountProfile {
+  email?: string;
+  status?: string;
+  statusTone: StatusTone;
+  statusText: string;
+  productName?: string;
+  teamName?: string;
+  groupName?: string;
+  updatedAt?: string;
+  note?: string;
+  productAccessUrl?: string;
+}
+
+/** Read a string field from a record, trimming and dropping empties. */
+function str(record: Record<string, unknown>, key: string): string | undefined {
+  const v = record[key];
+  if (typeof v === 'string' && v.trim() !== '') {
+    return v.trim();
+  }
+  return undefined;
+}
+
+/**
+ * Build the curated {@link AccountProfile} from a raw account/check record.
+ * Fields not present simply stay undefined so the UI can omit them.
+ */
+export function toAccountProfile(
+  data: Record<string, unknown>,
+): AccountProfile {
+  const status = str(data, 'status');
+  const productName =
+    str(data, 'productName') ??
+    (data.product && typeof data.product === 'object'
+      ? str(data.product as Record<string, unknown>, 'name')
+      : undefined);
+
+  return {
+    email: str(data, 'email'),
+    status,
+    statusTone: status ? statusTone(status) : 'neutral',
+    statusText: status ? statusLabel(status) : '',
+    productName,
+    teamName: str(data, 'teamName'),
+    groupName: str(data, 'groupName'),
+    updatedAt: str(data, 'updatedAt'),
+    note: str(data, 'note'),
+    productAccessUrl: str(data, 'productAccessUrl'),
+  };
 }

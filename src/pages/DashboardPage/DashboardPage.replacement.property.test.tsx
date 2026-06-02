@@ -23,10 +23,10 @@ import { DashboardPage } from './DashboardPage';
  *
  * Validates: Requirements 12.5
  *
- * Strategy: drive the Account Status panel (backed by `checkAccount`) with a
- * non-empty sequence of distinct key-value results. After running the whole
- * sequence, the panel must show exactly the final result's keys/values and none
- * of the keys/values that were unique to earlier results.
+ * Strategy: drive the Variables panel (backed by `getVariables`, rendered with
+ * the generic FieldList) with a non-empty sequence of distinct key/value
+ * records. After running the whole sequence, the panel must show exactly the
+ * final result's value and none of the values unique to earlier results.
  */
 
 const VALID_EMAIL = 'user@example.com';
@@ -80,15 +80,17 @@ describe('DashboardPage — Property 13: Dashboard panel result replacement', ()
       fc.asyncProperty(
         fc.array(recordArb, { minLength: 1, maxLength: 6 }),
         async (results) => {
-          // checkAccount resolves the next result on each successive call.
-          const checkAccount = jest.fn();
+          // getVariables resolves the next result on each successive call.
+          const getVariables = jest.fn();
           results.forEach((data) =>
-            checkAccount.mockResolvedValueOnce({ success: true, data }),
+            getVariables.mockResolvedValueOnce({ success: true, data }),
           );
           const accountService: AccountService = {
-            checkAccount,
+            checkAccount: jest
+              .fn()
+              .mockResolvedValue({ success: true, data: {} }),
             getAccount12h: jest.fn().mockResolvedValue({ success: true, data: [] }),
-            getVariables: jest.fn().mockResolvedValue({ success: true, data: {} }),
+            getVariables,
             reinvite: jest.fn().mockResolvedValue({ success: true, message: 'sent' }),
           };
 
@@ -106,19 +108,22 @@ describe('DashboardPage — Property 13: Dashboard panel result replacement', ()
 
           const input = screen.getByLabelText('Email address') as HTMLInputElement;
           fireEvent.change(input, { target: { value: VALID_EMAIL } });
-          // Flush the EmailInput debounce so the Check Status button enables.
+          // Flush the EmailInput debounce so the tools menu enables.
           act(() => {
             jest.advanceTimersByTime(EMAIL_VALIDATION_DEBOUNCE_MS);
           });
 
-          const button = screen.getByRole('button', { name: 'Kiểm tra trạng thái' });
-
-          // Run every result through the same panel in order. Each click awaits
-          // the resolved checkAccount promise so the panel reflects that result.
+          // Run "Lấy biến dữ liệu" from the tools dropdown for each result.
           for (let i = 0; i < results.length; i += 1) {
             // eslint-disable-next-line no-await-in-loop
             await act(async () => {
-              fireEvent.click(button);
+              fireEvent.click(
+                screen.getByRole('button', { name: 'Công cụ khác' }),
+              );
+            });
+            // eslint-disable-next-line no-await-in-loop
+            await act(async () => {
+              fireEvent.click(screen.getByTestId('tool-variables'));
             });
           }
 
@@ -126,7 +131,7 @@ describe('DashboardPage — Property 13: Dashboard panel result replacement', ()
           // (v_<token>) are rendered verbatim by FieldList and uniquely
           // identify each result; earlier values must be gone (Req 12.5).
           const panel = screen.getByRole('region', {
-            name: 'Trạng thái tài khoản',
+            name: 'Biến dữ liệu',
           });
           const finalValue = Object.values(results[results.length - 1])[0];
 

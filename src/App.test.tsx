@@ -86,7 +86,7 @@ describe('App - dashboard operations route into panels', () => {
   it('routes a successful account status result into its panel', async () => {
     mockedCheckAccount.mockResolvedValue({
       success: true,
-      data: { status: 'active', plan: 'pro' },
+      data: { email: 'user@example.com', status: 'active', plan: 'pro' },
     });
 
     render(<App />);
@@ -107,9 +107,13 @@ describe('App - dashboard operations route into panels', () => {
 
     const panel = screen.getByRole('region', { name: vi.panels.accountStatus });
     await waitFor(() =>
-      expect(within(panel).getByText('Trạng thái')).toBeInTheDocument(),
+      expect(
+        within(panel).getByTestId('account-status-badge').textContent,
+      ).toBe('Đang hoạt động'),
     );
-    expect(within(panel).getByText('Đang hoạt động')).toBeInTheDocument();
+    expect(within(panel).getByTestId('account-email').textContent).toBe(
+      'user@example.com',
+    );
     expect(mockedCheckAccount).toHaveBeenCalledWith('user@example.com');
   });
 

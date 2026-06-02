@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { ActionButton } from '../../components/ActionButton';
+import { AccountStatusCard } from '../../components/AccountStatusCard/AccountStatusCard';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { FieldList } from '../../components/FieldList/FieldList';
 import { DataTable } from '../../components/DataTable';
@@ -370,11 +371,7 @@ export function DashboardPage({
                   }
                 >
                   {accountStatus.status === 'success' ? (
-                    <FieldList
-                      data={accountStatus.data}
-                      label={vi.panels.accountStatus}
-                      emptyMessage={vi.empty.accountStatus}
-                    />
+                    <AccountStatusCard data={accountStatus.data} />
                   ) : (
                     <p className="panel-empty">{vi.empty.accountStatus}</p>
                   )}
