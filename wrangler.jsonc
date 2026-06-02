@@ -1,0 +1,23 @@
+{
+  // Cloudflare Workers static-assets configuration for the RITA Adobe SPA.
+  //
+  // This is a static Vite build (no server code). The Worker simply serves the
+  // contents of "dist/" as assets. Client-side routing is handled by
+  // "not_found_handling": "single-page-application", which serves index.html
+  // (HTTP 200) for any path that doesn't match a file -- so deep links like
+  // /account/check resolve in the React Router app.
+  //
+  // NOTE: Do NOT add a "public/_redirects" file for this deploy. Workers Assets
+  // rejects a catch-all "/* /index.html 200" rule as an infinite loop; the SPA
+  // fallback below replaces it.
+  "name": "rita-adobe",
+  "compatibility_date": "2026-06-02",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "directory": "./dist",
+    "not_found_handling": "single-page-application"
+  },
+  "observability": {
+    "enabled": true
+  }
+}

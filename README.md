@@ -79,4 +79,4 @@ The suite includes 13 property-based tests (fast-check) covering the correctness
 
 ## Deployment
 
-This is a static single-page application, so it can be hosted on any static host or CDN. See [DEPLOYMENT.md](./DEPLOYMENT.md) for Cloudflare Pages instructions.
+This is a static single-page application, so it can be hosted on any static host or CDN. It is configured for **Cloudflare Workers static assets** via the committed `wrangler.jsonc` (SPA routing handled by `not_found_handling`). See [DEPLOYMENT.md](./DEPLOYMENT.md) for full instructions.
