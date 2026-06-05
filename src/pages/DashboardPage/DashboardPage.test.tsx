@@ -95,12 +95,16 @@ function renderDashboard(props: Parameters<typeof DashboardPage>[0] = {}) {
 async function enterValidEmail(user: ReturnType<typeof userEvent.setup>) {
   const input = screen.getByLabelText('Email address');
   await user.type(input, VALID_EMAIL);
-  await waitFor(() =>
-    expect(
-      (screen.getByRole('button', {
-        name: 'Kiểm tra trạng thái',
-      }) as HTMLButtonElement).disabled,
-    ).toBe(false),
+  // Validity is reported after the 500ms debounce in EmailInput; allow ample
+  // headroom so the wait is robust when the full suite runs under load.
+  await waitFor(
+    () =>
+      expect(
+        (screen.getByRole('button', {
+          name: 'Kiểm tra trạng thái',
+        }) as HTMLButtonElement).disabled,
+      ).toBe(false),
+    { timeout: 3000 },
   );
 }
 

@@ -6,6 +6,7 @@ import {
   useState,
   type ReactNode,
 } from 'react';
+import { Icon } from '../Icon/Icon';
 import './Menu.css';
 
 /**
@@ -91,7 +92,7 @@ export function Menu({ triggerLabel, items, onSelect, disabled }: MenuProps) {
       >
         <span>{triggerLabel}</span>
         <span className="menu__chevron" aria-hidden="true">
-          ▾
+          <Icon name="chevron-down" />
         </span>
       </button>
 

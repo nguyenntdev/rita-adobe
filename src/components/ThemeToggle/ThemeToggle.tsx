@@ -1,4 +1,5 @@
 import { useTheme } from '../../context/ThemeContext';
+import { Icon } from '../Icon/Icon';
 import { vi } from '../../i18n/vi';
 
 /**
@@ -19,7 +20,7 @@ export function ThemeToggle() {
       aria-label={isDark ? vi.theme.toLight : vi.theme.toDark}
       title={isDark ? vi.theme.toLight : vi.theme.toDark}
     >
-      <span aria-hidden="true">{isDark ? '☀️' : '🌙'}</span>
+      <Icon name={isDark ? 'sun' : 'moon'} />
     </button>
   );
 }

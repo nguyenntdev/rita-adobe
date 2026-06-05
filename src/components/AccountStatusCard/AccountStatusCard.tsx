@@ -1,5 +1,6 @@
 import { useState } from 'react';
 
+import { Icon } from '../Icon/Icon';
 import { vi } from '../../i18n/vi';
 import { formatDateTime, toAccountProfile } from '../../utils/displayFormat';
 import './AccountStatusCard.css';
@@ -34,7 +35,7 @@ function CopyButton({ text, label }: { text: string; label: string }) {
         }
       }}
     >
-      {copied ? '✓' : '⧉'}
+      {copied ? <Icon name="check" /> : <Icon name="copy" />}
     </button>
   );
 }
@@ -101,7 +102,7 @@ export function AccountStatusCard({ data }: AccountStatusCardProps) {
           target="_blank"
           rel="noopener noreferrer"
         >
-          {vi.profile.openAccess} ↗
+          {vi.profile.openAccess} <Icon name="external" />
         </a>
       )}
 

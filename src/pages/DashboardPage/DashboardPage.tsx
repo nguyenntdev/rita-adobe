@@ -6,6 +6,7 @@ import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { FieldList } from '../../components/FieldList/FieldList';
 import { DataTable } from '../../components/DataTable';
 import { EmailInput } from '../../components/EmailInput';
+import { Icon } from '../../components/Icon/Icon';
 import { Menu } from '../../components/Menu/Menu';
 import { MonitorPanel } from '../../components/MonitorPanel';
 import { ResultPanel } from '../../components/ResultPanel';
@@ -288,7 +289,7 @@ export function DashboardPage({
               onClick={handleReinviteClick}
             >
               <span className="action-tile__icon" aria-hidden="true">
-                ♻️
+                <Icon name="reinvite" />
               </span>
               <span className="action-tile__text">
                 <span className="action-tile__title">{vi.actions.reinvite}</span>
@@ -304,7 +305,7 @@ export function DashboardPage({
               onClick={handleReadOtp}
             >
               <span className="action-tile__icon" aria-hidden="true">
-                🔑
+                <Icon name="otp" />
               </span>
               <span className="action-tile__text">
                 <span className="action-tile__title">{vi.actions.readOtp}</span>
@@ -335,21 +336,21 @@ export function DashboardPage({
                 {
                   id: '12h',
                   label: vi.actions.view12h,
-                  icon: '🕒',
+                  icon: <Icon name="clock" fixedWidth />,
                   loading: account12h.status === 'loading',
                   testId: 'tool-12h',
                 },
                 {
                   id: 'variables',
                   label: vi.actions.getVariables,
-                  icon: '🔧',
+                  icon: <Icon name="wrench" fixedWidth />,
                   loading: variables.status === 'loading',
                   testId: 'tool-variables',
                 },
                 {
                   id: 'monitor',
                   label: vi.actions.startMonitoring,
-                  icon: '📡',
+                  icon: <Icon name="monitor" fixedWidth />,
                   testId: 'tool-monitor',
                 },
               ]}
@@ -373,7 +374,7 @@ export function DashboardPage({
           {!hasAnyResult ? (
             <div className="results__placeholder">
               <span className="results__placeholder-icon" aria-hidden="true">
-                🔍
+                <Icon name="search" />
               </span>
               <p>{vi.empty.resultsHint}</p>
             </div>
@@ -409,7 +410,7 @@ export function DashboardPage({
                 >
                   {reinviteState.status === 'success' ? (
                     <p className="reinvite-message" data-testid="reinvite-message">
-                      <span aria-hidden="true">✓</span>
+                      <Icon name="check" />
                       {reinviteState.data}
                     </p>
                   ) : (

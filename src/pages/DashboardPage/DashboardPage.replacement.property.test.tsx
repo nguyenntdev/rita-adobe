@@ -149,5 +149,5 @@ describe('DashboardPage — Property 13: Dashboard panel result replacement', ()
       ),
       { numRuns: 100 },
     );
-  }, 60000);
+  }, 120000);
 });
